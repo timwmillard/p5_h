@@ -1,0 +1,10 @@
+
+*.o
+/demo
+/p5demo
+/p5style
+/canvas
+/shapes
+
+compile_flags.txt
+

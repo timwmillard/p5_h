@@ -1,0 +1,627 @@
+/*
+p5.h - Single header C library providing p5.js-like functionality using sokol_gp
+Version: 1.0.0
+
+USAGE:
+    Two usage styles available:
+
+    1) P5.js-style (recommended):
+    #include "sokol_app.h"
+    #include "sokol_gfx.h" 
+    #include "sokol_glue.h"
+    #include "sokol_gp.h"
+    #define P5_IMPLEMENTATION
+    #include "p5.h"
+
+    void setup() {
+        createCanvas(400, 300);  // Canvas smaller than window
+        // Initialize your sketch here (no drawing calls)
+    }
+
+    void draw() {
+        background(220, 220, 220);  // Light gray background
+        rect(50, 50, 100, 75);      // Rectangle
+        circle(width()/2, height()/2, 50);  // Centered circle
+        // Use p5.js-style function names directly!
+    }
+
+    P5_MAIN(640, 480, "My Sketch", 4);  // Window: 640x480, Canvas: 400x300
+
+    2) Manual style:
+    Call p5_init(), setup sokol manually, then use p5 functions in your frame loop.
+
+DEPENDENCIES:
+    Requires sokol_gp.h to be included before this header
+
+LICENSE:
+    Public Domain
+*/
+
+#ifndef P5_H
+#define P5_H
+
+#include <stdbool.h>
+#include <math.h>
+
+// Color structure
+typedef struct {
+    float r, g, b, a;
+} p5_color_t;
+
+// Transform state
+typedef struct {
+    float tx, ty;     // translation
+    float rot;        // rotation
+    float sx, sy;     // scale
+} p5_transform_t;
+
+// Canvas state
+typedef struct {
+    int width, height;    // Canvas dimensions
+    int x, y;            // Canvas position within window
+    bool created;        // Whether canvas has been created
+} p5_canvas_t;
+
+// Drawing state
+typedef struct {
+    p5_color_t fill_color;
+    p5_color_t stroke_color;
+    bool fill_enabled;
+    bool stroke_enabled;
+    float stroke_width;
+    p5_transform_t transform;
+    p5_transform_t transform_stack[32];
+    int transform_stack_depth;
+    p5_canvas_t canvas;
+} p5_state_t;
+
+// Global state
+extern p5_state_t p5_state;
+
+// Initialization
+void p5_init(void);
+
+// P5.js-style callback functions (user-defined)
+void setup(void);    // Called once at startup
+void draw(void);     // Called every frame
+
+// Canvas functions
+void createCanvas(int width, int height);
+void createCanvas_positioned(int width, int height, int x, int y);
+int width(void);
+int height(void);
+int windowWidth(void);
+int windowHeight(void);
+void p5_background(float r, float g, float b);
+void p5_background_color(p5_color_t color);
+
+// Color functions
+p5_color_t p5_color(float r, float g, float b);
+p5_color_t p5_color_alpha(float r, float g, float b, float a);
+void p5_fill(float r, float g, float b);
+void p5_fill_color(p5_color_t color);
+void p5_fill_alpha(float r, float g, float b, float a);
+void p5_stroke(float r, float g, float b);
+void p5_stroke_color(p5_color_t color);
+void p5_stroke_alpha(float r, float g, float b, float a);
+void p5_stroke_weight(float weight);
+void p5_no_fill(void);
+void p5_no_stroke(void);
+
+// Transform functions
+void p5_push(void);
+void p5_pop(void);
+void p5_translate(float x, float y);
+void p5_rotate(float angle);
+void p5_scale(float s);
+void p5_scale_xy(float sx, float sy);
+
+// Basic shapes
+void p5_point(float x, float y);
+void p5_line(float x1, float y1, float x2, float y2);
+void p5_rect(float x, float y, float w, float h);
+void p5_square(float x, float y, float size);
+void p5_circle(float x, float y, float diameter);
+void p5_ellipse(float x, float y, float w, float h);
+void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3);
+void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
+void p5_arc(float x, float y, float w, float h, float start, float stop);
+
+// Convenience aliases (p5.js style)
+#define rect p5_rect
+#define square p5_square
+#define circle p5_circle
+#define ellipse p5_ellipse
+#define triangle p5_triangle
+#define quad p5_quad
+#define arc p5_arc
+#define line p5_line
+#define point p5_point
+#define background(r,g,b) p5_background(r,g,b)
+#define fill(r,g,b) p5_fill(r,g,b)
+#define stroke(r,g,b) p5_stroke(r,g,b)
+#define noFill() p5_no_fill()
+#define noStroke() p5_no_stroke()
+#define push() p5_push()
+#define pop() p5_pop()
+#define translate(x,y) p5_translate(x,y)
+#define rotate(a) p5_rotate(a)
+#define scale(s) p5_scale(s)
+
+// Convenience macro to create sokol_main (use after defining setup() and draw())
+#define P5_MAIN(w, h, t, s) \
+    sapp_desc sokol_main(int argc, char* argv[]) { \
+        return (sapp_desc) { \
+            .width = w, \
+            .height = h, \
+            .sample_count = s, \
+            .init_cb = p5_sokol_init, \
+            .frame_cb = p5_sokol_frame, \
+            .cleanup_cb = p5_sokol_cleanup, \
+            .event_cb = p5_sokol_event, \
+            .window_title = t, \
+        }; \
+    }
+
+// Math constants
+#ifndef PI
+#define PI 3.14159265358979323846f
+#endif
+#ifndef TWO_PI
+#define TWO_PI (2.0f * PI)
+#endif
+#ifndef HALF_PI
+#define HALF_PI (PI * 0.5f)
+#endif
+
+#ifdef P5_IMPLEMENTATION
+
+// sokol_gp.h should already be included before this header
+
+p5_state_t p5_state;
+
+// Sokol wrapper functions
+static void p5_sokol_init(void) {
+    sg_setup(&(sg_desc){
+        .environment = sglue_environment(),
+    });
+    
+    sgp_setup(&(sgp_desc){0});  // Inherit MSAA from sokol_app
+    p5_init();
+    setup();  // Call user setup function
+}
+
+static void p5_sokol_frame(void) {
+    sgp_begin(sapp_width(), sapp_height());
+    
+    // Set viewport to canvas area if canvas was created
+    if (p5_state.canvas.created) {
+        sgp_viewport(p5_state.canvas.x, p5_state.canvas.y, 
+                     p5_state.canvas.width, p5_state.canvas.height);
+        sgp_project(0.0f, (float)p5_state.canvas.width, 
+                    0.0f, (float)p5_state.canvas.height);
+    } else {
+        // Default to full window if no canvas created
+        sgp_viewport(0, 0, sapp_width(), sapp_height());
+        sgp_project(0.0f, (float)sapp_width(), 0.0f, (float)sapp_height());
+    }
+    
+    draw();  // Call user draw function
+    
+    sg_begin_pass(&(sg_pass){
+        .swapchain = sglue_swapchain()
+    });
+    sgp_flush();
+    sgp_end();
+    sg_end_pass();
+    sg_commit();
+}
+
+static void p5_sokol_cleanup(void) {
+    sgp_shutdown();
+    sg_shutdown();
+}
+
+static void p5_sokol_event(const sapp_event* ev) {
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) {
+        if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
+            sapp_quit();
+        }
+    }
+}
+
+void p5_init(void) {
+    p5_state.fill_color = (p5_color_t){1.0f, 1.0f, 1.0f, 1.0f};
+    p5_state.stroke_color = (p5_color_t){0.0f, 0.0f, 0.0f, 1.0f};
+    p5_state.fill_enabled = true;
+    p5_state.stroke_enabled = true;
+    p5_state.stroke_width = 1.0f;
+    p5_state.transform = (p5_transform_t){0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
+    p5_state.transform_stack_depth = 0;
+    p5_state.canvas.created = false;
+    p5_state.canvas.width = 0;
+    p5_state.canvas.height = 0;
+    p5_state.canvas.x = 0;
+    p5_state.canvas.y = 0;
+}
+
+// Canvas functions
+void createCanvas(int w, int h) {
+    // Center the canvas in the window
+    int win_w = sapp_width();
+    int win_h = sapp_height();
+    int x = (win_w - w) / 2;
+    int y = (win_h - h) / 2;
+    createCanvas_positioned(w, h, x, y);
+}
+
+void createCanvas_positioned(int w, int h, int x, int y) {
+    // Validate canvas fits within window
+    if (w <= 0 || h <= 0) return;
+    if (x < 0 || y < 0) return;
+    if (x + w > sapp_width() || y + h > sapp_height()) return;
+    
+    p5_state.canvas.width = w;
+    p5_state.canvas.height = h;
+    p5_state.canvas.x = x;
+    p5_state.canvas.y = y;
+    p5_state.canvas.created = true;
+}
+
+int width(void) {
+    return p5_state.canvas.created ? p5_state.canvas.width : sapp_width();
+}
+
+int height(void) {
+    return p5_state.canvas.created ? p5_state.canvas.height : sapp_height();
+}
+
+int windowWidth(void) {
+    return sapp_width();
+}
+
+int windowHeight(void) {
+    return sapp_height();
+}
+
+// Helper function to apply current transform
+static void p5_apply_transform(void) {
+    if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f ||
+        p5_state.transform.rot != 0.0f || 
+        p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
+        sgp_push_transform();
+        if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f) {
+            sgp_translate(p5_state.transform.tx, p5_state.transform.ty);
+        }
+        if (p5_state.transform.rot != 0.0f) {
+            sgp_rotate(p5_state.transform.rot);
+        }
+        if (p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
+            sgp_scale(p5_state.transform.sx, p5_state.transform.sy);
+        }
+    }
+}
+
+static void p5_restore_transform(void) {
+    if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f ||
+        p5_state.transform.rot != 0.0f || 
+        p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
+        sgp_pop_transform();
+    }
+}
+
+
+// Canvas functions
+void p5_background(float r, float g, float b) {
+    sgp_set_color(r, g, b, 1.0f);
+    sgp_clear();
+}
+
+void p5_background_color(p5_color_t color) {
+    sgp_set_color(color.r, color.g, color.b, color.a);
+    sgp_clear();
+}
+
+
+// Color functions
+p5_color_t p5_color(float r, float g, float b) {
+    return (p5_color_t){r, g, b, 1.0f};
+}
+
+p5_color_t p5_color_alpha(float r, float g, float b, float a) {
+    return (p5_color_t){r, g, b, a};
+}
+
+void p5_fill(float r, float g, float b) {
+    p5_state.fill_color = (p5_color_t){r, g, b, 1.0f};
+    p5_state.fill_enabled = true;
+}
+
+void p5_fill_color(p5_color_t color) {
+    p5_state.fill_color = color;
+    p5_state.fill_enabled = true;
+}
+
+void p5_fill_alpha(float r, float g, float b, float a) {
+    p5_state.fill_color = (p5_color_t){r, g, b, a};
+    p5_state.fill_enabled = true;
+}
+
+void p5_stroke(float r, float g, float b) {
+    p5_state.stroke_color = (p5_color_t){r, g, b, 1.0f};
+    p5_state.stroke_enabled = true;
+}
+
+void p5_stroke_color(p5_color_t color) {
+    p5_state.stroke_color = color;
+    p5_state.stroke_enabled = true;
+}
+
+void p5_stroke_alpha(float r, float g, float b, float a) {
+    p5_state.stroke_color = (p5_color_t){r, g, b, a};
+    p5_state.stroke_enabled = true;
+}
+
+void p5_stroke_weight(float weight) {
+    p5_state.stroke_width = weight;
+}
+
+void p5_no_fill(void) {
+    p5_state.fill_enabled = false;
+}
+
+void p5_no_stroke(void) {
+    p5_state.stroke_enabled = false;
+}
+
+// Transform functions
+void p5_push(void) {
+    if (p5_state.transform_stack_depth < 32) {
+        p5_state.transform_stack[p5_state.transform_stack_depth] = p5_state.transform;
+        p5_state.transform_stack_depth++;
+    }
+}
+
+void p5_pop(void) {
+    if (p5_state.transform_stack_depth > 0) {
+        p5_state.transform_stack_depth--;
+        p5_state.transform = p5_state.transform_stack[p5_state.transform_stack_depth];
+    }
+}
+
+void p5_translate(float x, float y) {
+    p5_state.transform.tx += x;
+    p5_state.transform.ty += y;
+}
+
+void p5_rotate(float angle) {
+    p5_state.transform.rot += angle;
+}
+
+void p5_scale(float s) {
+    p5_state.transform.sx *= s;
+    p5_state.transform.sy *= s;
+}
+
+void p5_scale_xy(float sx, float sy) {
+    p5_state.transform.sx *= sx;
+    p5_state.transform.sy *= sy;
+}
+
+// Basic shapes
+void p5_point(float x, float y) {
+    p5_apply_transform();
+    sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
+                  p5_state.stroke_color.b, p5_state.stroke_color.a);
+    sgp_draw_point(x, y);
+    p5_restore_transform();
+}
+
+void p5_line(float x1, float y1, float x2, float y2) {
+    if (!p5_state.stroke_enabled) return;
+    
+    p5_apply_transform();
+    sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
+                  p5_state.stroke_color.b, p5_state.stroke_color.a);
+    sgp_draw_line(x1, y1, x2, y2);
+    p5_restore_transform();
+}
+
+void p5_rect(float x, float y, float w, float h) {
+    p5_apply_transform();
+    
+    // Fill
+    if (p5_state.fill_enabled) {
+        sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
+                      p5_state.fill_color.b, p5_state.fill_color.a);
+        sgp_draw_filled_rect(x, y, w, h);
+    }
+    
+    // Stroke
+    if (p5_state.stroke_enabled) {
+        sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
+                      p5_state.stroke_color.b, p5_state.stroke_color.a);
+        // Draw rectangle outline using lines
+        sgp_draw_line(x, y, x + w, y);         // top
+        sgp_draw_line(x + w, y, x + w, y + h); // right
+        sgp_draw_line(x + w, y + h, x, y + h); // bottom
+        sgp_draw_line(x, y + h, x, y);         // left
+    }
+    
+    p5_restore_transform();
+}
+
+void p5_circle(float x, float y, float diameter) {
+    p5_ellipse(x, y, diameter, diameter);
+}
+
+void p5_ellipse(float x, float y, float w, float h) {
+    p5_apply_transform();
+    
+    // Approximate ellipse with segments
+    const int segments = 32;
+    float rx = w * 0.5f;
+    float ry = h * 0.5f;
+    float cx = x + rx;
+    float cy = y + ry;
+    
+    // Fill
+    if (p5_state.fill_enabled) {
+        sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
+                      p5_state.fill_color.b, p5_state.fill_color.a);
+        
+        // Draw triangular segments for filled ellipse
+        for (int i = 0; i < segments; i++) {
+            float angle1 = (float)i / segments * TWO_PI;
+            float angle2 = (float)(i + 1) / segments * TWO_PI;
+            
+            float x1 = cx + cosf(angle1) * rx;
+            float y1 = cy + sinf(angle1) * ry;
+            float x2 = cx + cosf(angle2) * rx;
+            float y2 = cy + sinf(angle2) * ry;
+            
+            sgp_draw_filled_triangle(cx, cy, x1, y1, x2, y2);
+        }
+    }
+    
+    // Stroke
+    if (p5_state.stroke_enabled) {
+        sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
+                      p5_state.stroke_color.b, p5_state.stroke_color.a);
+        
+        // Draw ellipse outline using line segments
+        for (int i = 0; i < segments; i++) {
+            float angle1 = (float)i / segments * TWO_PI;
+            float angle2 = (float)(i + 1) / segments * TWO_PI;
+            
+            float x1 = cx + cosf(angle1) * rx;
+            float y1 = cy + sinf(angle1) * ry;
+            float x2 = cx + cosf(angle2) * rx;
+            float y2 = cy + sinf(angle2) * ry;
+            
+            sgp_draw_line(x1, y1, x2, y2);
+        }
+    }
+    
+    p5_restore_transform();
+}
+
+void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
+    p5_apply_transform();
+    
+    // Fill
+    if (p5_state.fill_enabled) {
+        sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
+                      p5_state.fill_color.b, p5_state.fill_color.a);
+        sgp_draw_filled_triangle(x1, y1, x2, y2, x3, y3);
+    }
+    
+    // Stroke
+    if (p5_state.stroke_enabled) {
+        sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
+                      p5_state.stroke_color.b, p5_state.stroke_color.a);
+        sgp_draw_line(x1, y1, x2, y2);
+        sgp_draw_line(x2, y2, x3, y3);
+        sgp_draw_line(x3, y3, x1, y1);
+    }
+    
+    p5_restore_transform();
+}
+
+void p5_square(float x, float y, float size) {
+    p5_rect(x, y, size, size);
+}
+
+void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
+    p5_apply_transform();
+    
+    // Fill (using two triangles)
+    if (p5_state.fill_enabled) {
+        sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
+                      p5_state.fill_color.b, p5_state.fill_color.a);
+        sgp_draw_filled_triangle(x1, y1, x2, y2, x3, y3);
+        sgp_draw_filled_triangle(x1, y1, x3, y3, x4, y4);
+    }
+    
+    // Stroke
+    if (p5_state.stroke_enabled) {
+        sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
+                      p5_state.stroke_color.b, p5_state.stroke_color.a);
+        sgp_draw_line(x1, y1, x2, y2);
+        sgp_draw_line(x2, y2, x3, y3);
+        sgp_draw_line(x3, y3, x4, y4);
+        sgp_draw_line(x4, y4, x1, y1);
+    }
+    
+    p5_restore_transform();
+}
+
+void p5_arc(float x, float y, float w, float h, float start, float stop) {
+    p5_apply_transform();
+    
+    const int segments = 32;
+    float rx = w * 0.5f;
+    float ry = h * 0.5f;
+    float cx = x + rx;
+    float cy = y + ry;
+    
+    // Convert angles to radians (assuming degrees like p5.js)
+    float start_rad = start * PI / 180.0f;
+    float stop_rad = stop * PI / 180.0f;
+    float angle_range = stop_rad - start_rad;
+    
+    // Fill
+    if (p5_state.fill_enabled) {
+        sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
+                      p5_state.fill_color.b, p5_state.fill_color.a);
+        
+        // Draw triangular segments for filled arc
+        for (int i = 0; i < segments; i++) {
+            float t1 = (float)i / segments;
+            float t2 = (float)(i + 1) / segments;
+            float angle1 = start_rad + t1 * angle_range;
+            float angle2 = start_rad + t2 * angle_range;
+            
+            float x1 = cx + cosf(angle1) * rx;
+            float y1 = cy + sinf(angle1) * ry;
+            float x2 = cx + cosf(angle2) * rx;
+            float y2 = cy + sinf(angle2) * ry;
+            
+            sgp_draw_filled_triangle(cx, cy, x1, y1, x2, y2);
+        }
+    }
+    
+    // Stroke
+    if (p5_state.stroke_enabled) {
+        sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
+                      p5_state.stroke_color.b, p5_state.stroke_color.a);
+        
+        // Draw arc outline using line segments
+        for (int i = 0; i < segments; i++) {
+            float t1 = (float)i / segments;
+            float t2 = (float)(i + 1) / segments;
+            float angle1 = start_rad + t1 * angle_range;
+            float angle2 = start_rad + t2 * angle_range;
+            
+            float x1 = cx + cosf(angle1) * rx;
+            float y1 = cy + sinf(angle1) * ry;
+            float x2 = cx + cosf(angle2) * rx;
+            float y2 = cy + sinf(angle2) * ry;
+            
+            sgp_draw_line(x1, y1, x2, y2);
+        }
+        
+        // Draw closing lines for CHORD mode (default)
+        float start_x = cx + cosf(start_rad) * rx;
+        float start_y = cy + sinf(start_rad) * ry;
+        float stop_x = cx + cosf(stop_rad) * rx;
+        float stop_y = cy + sinf(stop_rad) * ry;
+        sgp_draw_line(start_x, start_y, stop_x, stop_y);
+    }
+    
+    p5_restore_transform();
+}
+
+#endif // P5_IMPLEMENTATION
+
+#endif // P5_H
