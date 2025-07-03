@@ -117,6 +117,8 @@ typedef struct {
     p5_transform_t transform_stack[32];
     int transform_stack_depth;
     p5_canvas_t canvas;
+    bool setup_has_drawn;  // Internal flag for p5.js compatibility  
+    bool in_setup_mode;    // Currently executing setup() - for p5.js compatibility
 } p5_state_t;
 
 //
@@ -312,7 +314,7 @@ static void p5__sokol_init(void) {
     
     sgp_setup(&(sgp_desc){0});  // Inherit MSAA from sokol_app
     p5_init();
-    setup();  // Call user setup function
+    // setup() will be called in first frame when graphics context is active
 }
 
 static void p5__sokol_frame(void) {
@@ -330,7 +332,20 @@ static void p5__sokol_frame(void) {
         sgp_project(0.0f, (float)sapp_width(), 0.0f, (float)sapp_height());
     }
     
-    draw();  // Call user draw function
+    // P5.js compatibility: Execute setup() drawing commands every frame
+    // This simulates canvas persistence by redrawing setup() content each frame
+    p5_state.in_setup_mode = true;
+    if (!p5_state.setup_has_drawn) {
+        setup();  // Call user setup - this will draw every frame now
+        p5_state.setup_has_drawn = true;
+    } else {
+        // Re-execute setup() drawing commands to maintain image persistence
+        setup();  // Setup always gets called to redraw its content
+    }
+    p5_state.in_setup_mode = false;
+    
+    // Call draw() for any additional per-frame drawing
+    draw();
     
     sg_begin_pass(&(sg_pass){
         .swapchain = sglue_swapchain()
@@ -402,6 +417,8 @@ void p5_init(void) {
     p5_state.canvas.height = 0;
     p5_state.canvas.x = 0;
     p5_state.canvas.y = 0;
+    p5_state.setup_has_drawn = false;  // Initialize p5.js compatibility flag
+    p5_state.in_setup_mode = false;    // Not in setup initially
 }
 
 // Canvas functions
@@ -415,6 +432,9 @@ void p5_create_canvas(int w, int h) {
 }
 
 void p5_create_canvas_positioned(int w, int h, int x, int y) {
+    // P5.js compatibility: only create canvas once (idempotent)
+    if (p5_state.canvas.created) return;
+    
     // Validate canvas fits within window
     if (w <= 0 || h <= 0) return;
     if (x < 0 || y < 0) return;

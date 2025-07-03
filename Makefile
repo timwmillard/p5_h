@@ -29,6 +29,21 @@ canvas: src/canvas_demo.c p5.h deps/deps.o
 shapes: src/shapes_demo.c p5.h deps/deps.o
 	clang -o shapes $(CFLAGS) $(LIBS) deps/deps.o src/shapes_demo.c
 
+setup_draw: src/setup_draw_demo.c p5.h deps/deps.o
+	clang -o setup_draw $(CFLAGS) $(LIBS) deps/deps.o src/setup_draw_demo.c
+
+p5js_style: src/p5js_style_demo.c p5.h deps/deps.o
+	clang -o p5js_style $(CFLAGS) $(LIBS) deps/deps.o src/p5js_style_demo.c
+
+p5js_test: src/p5js_compatible_test.c p5.h deps/deps.o
+	clang -o p5js_test $(CFLAGS) $(LIBS) deps/deps.o src/p5js_compatible_test.c
+
+p5js_final: src/p5js_final_test.c p5.h deps/deps.o
+	clang -o p5js_final $(CFLAGS) $(LIBS) deps/deps.o src/p5js_final_test.c
+
+p5js_seamless: src/p5js_seamless_test.c p5.h deps/deps.o
+	clang -o p5js_seamless $(CFLAGS) $(LIBS) deps/deps.o src/p5js_seamless_test.c
+
 run: demo
 	@./demo
 
@@ -40,6 +55,21 @@ run_canvas: canvas
 
 run_shapes: shapes
 	@./shapes
+
+run_setup_draw: setup_draw
+	@./setup_draw
+
+run_p5js_style: p5js_style
+	@./p5js_style
+
+run_p5js_test: p5js_test
+	@./p5js_test
+
+run_p5js_final: p5js_final
+	@./p5js_final
+
+run_p5js_seamless: p5js_seamless
+	@./p5js_seamless
 
 
 compile_flags.txt: FORCE

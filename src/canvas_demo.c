@@ -16,9 +16,6 @@ static float time = 0.0f;
 void setup() {
     // Create a 400x300 canvas centered in the 800x600 window
     createCanvas(400, 300);
-    
-    printf("Window: %dx%d\n", windowWidth(), windowHeight());
-    printf("Canvas: %dx%d\n", width(), height());
 }
 
 void draw() {

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="p5.min.js"></script>
+</head>
+<body>
+  <script>
+    // This example mimics the p5.js.org shape primitives example
+    function setup() {
+      createCanvas(400, 300);
+      
+      // Drawing in setup() - this persists!
+      background(240);
+      
+      // Red rectangle
+      fill(255, 0, 0);
+      stroke(0);
+      rect(50, 50, 100, 75);
+      
+      // Blue circle
+      fill(0, 0, 255);
+      circle(250, 100, 60);
+      
+      // Green triangle  
+      fill(0, 200, 0);
+      triangle(100, 200, 150, 150, 200, 200);
+      
+      console.log("Setup complete - shapes drawn once!");
+    }
+    
+    function draw() {
+      // This is called every frame but we don't clear the canvas
+      // So the shapes from setup() remain visible
+      
+      // Optional: add some minimal animation to show draw() is running
+      // Uncomment the next line to see draw() is being called
+      // console.log("Draw frame");
+    }
+  </script>
+</body>
+</html>

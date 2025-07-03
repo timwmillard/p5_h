@@ -16,8 +16,6 @@ static float time = 0.0f;
 void setup() {
     // Called once at startup - initialize your sketch here
     createCanvas(600, 450);  // Create canvas smaller than window
-    printf("P5.js-style setup complete!\n");
-    printf("Window: %dx%d, Canvas: %dx%d\n", windowWidth(), windowHeight(), width(), height());
 }
 
 void draw() {

@@ -5,6 +5,11 @@
 /p5style
 /canvas
 /shapes
+/setup_draw
+/p5js_style
+/p5js_test
+/p5js_final
+/p5js_seamless
 
 # Test binaries
 /test_basic_shapes
