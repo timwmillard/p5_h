@@ -44,6 +44,12 @@ p5js_final: src/p5js_final_test.c p5.h deps/deps.o
 p5js_seamless: src/p5js_seamless_test.c p5.h deps/deps.o
 	clang -o p5js_seamless $(CFLAGS) $(LIBS) deps/deps.o src/p5js_seamless_test.c
 
+examples/shape_primitives: examples/shape_primitives.c p5.h deps/deps.o
+	clang -o examples/shape_primitives $(CFLAGS) $(LIBS) deps/deps.o examples/shape_primitives.c
+
+examples/color: examples/color.c p5.h deps/deps.o
+	clang -o examples/color $(CFLAGS) $(LIBS) deps/deps.o examples/color.c
+
 run: demo
 	@./demo
 
@@ -71,6 +77,8 @@ run_p5js_final: p5js_final
 run_p5js_seamless: p5js_seamless
 	@./p5js_seamless
 
+run_color: examples/color
+	@./examples/color
 
 compile_flags.txt: FORCE
 	@echo "Generating compile_flags.txt for IDE support"
