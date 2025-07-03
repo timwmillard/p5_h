@@ -60,4 +60,4 @@ void draw() {
 }
 
 // Create the sokol_main function with p5.js-style
-P5_MAIN(640, 480, "P5.js Style Demo", 4);
+P5_MAIN(640, 480, "P5.js Style Demo");

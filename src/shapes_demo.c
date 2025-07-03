@@ -54,4 +54,4 @@ void draw() {
 }
 
 // Create window larger than canvas to show the effect
-P5_MAIN(800, 500, "P5.js Shapes Demo", 4);
+P5_MAIN(800, 500, "P5.js Shapes Demo");

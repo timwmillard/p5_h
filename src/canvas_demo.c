@@ -53,4 +53,4 @@ void draw() {
 }
 
 // 800x600 window with 4x antialiasing
-P5_MAIN(800, 600, "Canvas Demo - 400x300 canvas in 800x600 window", 4);
+P5_MAIN(800, 600, "Canvas Demo - 400x300 canvas in 800x600 window");

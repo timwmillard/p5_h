@@ -253,12 +253,12 @@ static inline void arc(float x, float y, float w, float h, float start, float st
 #ifndef P5_NO_APP
 // Convenience macro to create sokol_main (use after defining setup() and draw())
 // Only available when P5_NO_APP is not defined
-#define P5_MAIN(window_w, window_h, title_str, samples) \
+#define P5_MAIN(window_w, window_h, title_str) \
     sapp_desc sokol_main(int argc, char* argv[]) { \
         sapp_desc _p5_desc = {0}; \
         _p5_desc.width = window_w; \
         _p5_desc.height = window_h; \
-        _p5_desc.sample_count = samples; \
+        _p5_desc.sample_count = 4; \
         _p5_desc.init_cb = p5__sokol_init; \
         _p5_desc.frame_cb = p5__sokol_frame; \
         _p5_desc.cleanup_cb = p5__sokol_cleanup; \
