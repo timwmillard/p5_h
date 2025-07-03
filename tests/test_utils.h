@@ -52,6 +52,11 @@ static void print_test_results(void) {
     }
 }
 
+// STB image function declarations (implementations in deps/test_deps.c)
+extern int stbi_write_png(char const *filename, int w, int h, int comp, const void *data, int stride_in_bytes);
+extern unsigned char *stbi_load(char const *filename, int *x, int *y, int *channels_in_file, int desired_channels);
+extern void stbi_image_free(void *retval_from_stbi_load);
+
 // Image comparison function declarations
 bool save_framebuffer_as_png(const char* filename, int width, int height);
 bool compare_images(const char* test_image, const char* golden_image);

@@ -3,21 +3,13 @@ test_utils.c - Implementation of testing utilities for p5.h library
 */
 
 #include "test_utils.h"
+#include "test_renderer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
-// STB image write implementation for PNG saving
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../deps/stb_image_write.h"
-
-// STB image implementation for PNG loading and comparison
-#define STB_IMAGE_IMPLEMENTATION
-#include "../deps/stb_image.h"
-
-// Sokol includes for framebuffer access
-#include "../deps/sokol_gfx.h"
+// Note: STB implementations are now in deps/test_deps.c
 
 bool file_exists(const char* filename) {
     struct stat buffer;
@@ -25,41 +17,9 @@ bool file_exists(const char* filename) {
 }
 
 bool save_framebuffer_as_png(const char* filename, int width, int height) {
-    // Allocate buffer for pixel data (RGBA)
-    unsigned char* pixels = (unsigned char*)malloc(width * height * 4);
-    if (!pixels) {
-        printf("ERROR: Failed to allocate memory for framebuffer\n");
-        return false;
-    }
-    
-    // Read pixels from current framebuffer
-    // Note: This is a simplified approach. In practice, you might need to
-    // render to an offscreen target and read from there
-    sg_image_data img_data = {0};
-    
-    // For now, create a test pattern since direct framebuffer reading
-    // requires more complex setup with sokol offscreen rendering
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int idx = (y * width + x) * 4;
-            pixels[idx + 0] = 255;  // R
-            pixels[idx + 1] = 255;  // G  
-            pixels[idx + 2] = 255;  // B
-            pixels[idx + 3] = 255;  // A
-        }
-    }
-    
-    // Save as PNG using stb_image_write
-    int result = stbi_write_png(filename, width, height, 4, pixels, width * 4);
-    
-    free(pixels);
-    
-    if (!result) {
-        printf("ERROR: Failed to save PNG file: %s\n", filename);
-        return false;
-    }
-    
-    printf("Saved framebuffer to: %s (%dx%d)\n", filename, width, height);
+    // This is a stub implementation for simple tests
+    // In real visual tests, this would use test_renderer_save_png()
+    printf("save_framebuffer_as_png: %s (%dx%d) - stub implementation\n", filename, width, height);
     return true;
 }
 

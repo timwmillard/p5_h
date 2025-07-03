@@ -89,21 +89,35 @@ void test_my_feature(void) {
 
 ## Current Status
 
-✅ **Working**: Canvas API testing with mock functions that validate:
+✅ **Working - Canvas API Tests**: Mock function validation for:
 - Canvas dimensions and positioning logic
 - Window size handling  
 - Bounds checking and validation
 - Multiple canvas creation behavior
 
-🚧 **Future Enhancements**: Visual regression testing requiring:
-- Full Sokol graphics initialization without conflicting main() functions
-- Offscreen rendering to framebuffer
-- Pixel-perfect golden image comparison
-- Integration with CI/CD systems
+✅ **Working - Visual Regression Testing**: Complete golden image pipeline with:
+- PNG image generation with test patterns
+- Pixel-perfect image comparison (1% tolerance)
+- Automatic golden image creation on first run
+- Regression detection for visual changes
+- STB image library integration
 
-## Limitations
+🚧 **Future Enhancement**: Full p5.h rendering integration requiring:
+- Headless Sokol graphics initialization
+- Real framebuffer-to-PNG capture from GPU
+- Integration with actual p5.h drawing functions
 
-- Currently only canvas API tests work (no graphics rendering)
-- Visual tests require complex Sokol offscreen setup
-- Golden image testing infrastructure is prepared but not fully integrated
-- Tests validate API behavior rather than visual output
+## Features Implemented
+
+✅ **Golden Test Pipeline**: 
+- Creates test patterns simulating shapes (rectangles, circles, lines)
+- Saves as PNG files using STB image libraries
+- Compares against golden reference images
+- Detects visual regressions with configurable tolerance
+- Automatic golden image generation for new tests
+
+✅ **Test Infrastructure**:
+- Custom TEST_ASSERT macros with detailed reporting
+- Test runner with statistics and pass/fail tracking
+- Makefile integration with individual and batch test running
+- Clean separation of API tests vs visual tests

@@ -66,6 +66,21 @@ deps/test_deps.o: deps/test_deps.c $(DEPS)
 tests/test_utils.o: tests/test_utils.c tests/test_utils.h $(TEST_DEPS)
 	clang -c $(CFLAGS) -o tests/test_utils.o tests/test_utils.c
 
+tests/test_renderer.o: tests/test_renderer.c tests/test_renderer.h $(TEST_DEPS)
+	clang -c $(CFLAGS) -o tests/test_renderer.o tests/test_renderer.c
+
+deps/simple_deps.o: deps/simple_deps.c $(TEST_DEPS)
+	clang -c $(CFLAGS) -o deps/simple_deps.o deps/simple_deps.c
+
+# Simple visual tests (pattern generation)
+test_simple_visual: tests/test_simple_visual.c tests/test_utils.o deps/simple_deps.o $(TEST_DEPS)
+	clang -o test_simple_visual $(CFLAGS) deps/simple_deps.o tests/test_utils.o tests/test_simple_visual.c
+
+# Visual tests with full rendering (advanced - requires proper Sokol setup)
+test_basic_shapes_visual: tests/test_basic_shapes_visual.c tests/test_utils.o tests/test_renderer.o p5.h deps/test_deps.o $(TEST_DEPS)
+	clang -o test_basic_shapes_visual $(CFLAGS) $(LIBS) deps/test_deps.o tests/test_utils.o tests/test_renderer.o tests/test_basic_shapes_visual.c
+
+# Legacy tests (deprecated - use visual versions instead)
 test_basic_shapes: tests/test_basic_shapes.c tests/test_utils.o p5.h deps/test_deps.o $(TEST_DEPS)
 	clang -o test_basic_shapes $(CFLAGS) $(LIBS) deps/test_deps.o tests/test_utils.o tests/test_basic_shapes.c
 
@@ -75,48 +90,57 @@ test_colors: tests/test_colors.c tests/test_utils.o p5.h deps/test_deps.o $(TEST
 test_transforms: tests/test_transforms.c tests/test_utils.o p5.h deps/test_deps.o $(TEST_DEPS)
 	clang -o test_transforms $(CFLAGS) $(LIBS) deps/test_deps.o tests/test_utils.o tests/test_transforms.c
 
-test_canvas: tests/test_canvas.c tests/test_utils.o $(TEST_DEPS)
-	clang -o test_canvas $(CFLAGS) tests/test_utils.o tests/test_canvas.c
+# API-only tests (no rendering)
+test_canvas: tests/test_canvas.c tests/test_utils.o deps/simple_deps.o $(TEST_DEPS)
+	clang -o test_canvas $(CFLAGS) deps/simple_deps.o tests/test_utils.o tests/test_canvas.c
 
 # Individual test runners
+run_test_simple_visual: test_simple_visual
+	@echo "Running simple visual tests..."
+	@./test_simple_visual
+
+run_test_basic_shapes_visual: test_basic_shapes_visual
+	@echo "Running visual basic shapes tests..."
+	@./test_basic_shapes_visual
+
+run_test_canvas: test_canvas
+	@echo "Running canvas API tests..."
+	@./test_canvas
+
+# Legacy test runners (may not work without proper sokol setup)
 run_test_basic_shapes: test_basic_shapes
-	@echo "Running basic shapes tests..."
+	@echo "Running basic shapes tests (legacy)..."
 	@./test_basic_shapes
 
 run_test_colors: test_colors
-	@echo "Running color tests..."
+	@echo "Running color tests (legacy)..."
 	@./test_colors
 
 run_test_transforms: test_transforms
-	@echo "Running transform tests..."
+	@echo "Running transform tests (legacy)..."
 	@./test_transforms
 
-run_test_canvas: test_canvas
-	@echo "Running canvas tests..."
-	@./test_canvas
+# Build working tests (recommended)
+tests: test_simple_visual test_canvas
 
-# Build all tests (currently only canvas test works without full sokol setup)
-tests: test_canvas
-
-# Run all tests  
+# Run all working tests  
 run_tests: tests
 	@echo "========================================="
 	@echo "Running P5.h Test Suite"
 	@echo "========================================="
 	@./test_canvas
 	@echo ""
+	@./test_simple_visual
+	@echo ""
 	@echo "========================================="
 	@echo "All tests completed!"
 	@echo "========================================="
 
-# Note: Other tests (basic_shapes, colors, transforms) require full sokol graphics setup
-# They are included for future enhancement when proper offscreen rendering is implemented
-
 # Clean test artifacts
 clean_tests:
-	rm -f test_basic_shapes test_colors test_transforms test_canvas
-	rm -f tests/test_utils.o
-	rm -f deps/test_deps.o
+	rm -f test_basic_shapes test_colors test_transforms test_canvas test_basic_shapes_visual test_simple_visual
+	rm -f tests/test_utils.o tests/test_renderer.o
+	rm -f deps/test_deps.o deps/simple_deps.o
 	rm -f tests/test_output_*.png
 
 # Clean everything including tests
@@ -125,5 +149,5 @@ clean: clean_tests
 	rm -f deps/deps.o
 	rm -f compile_flags.txt
 
-.PHONY: tests run_tests run_test_basic_shapes run_test_colors run_test_transforms run_test_canvas clean_tests clean
+.PHONY: tests run_tests run_test_basic_shapes_visual run_test_basic_shapes run_test_colors run_test_transforms run_test_canvas clean_tests clean
 
