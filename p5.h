@@ -27,12 +27,36 @@ USAGE:
 
     P5_MAIN(640, 480, "My Sketch", 4);  // Window: 640x480, Canvas: 400x300
 
-    2) Manual style:
-    Call p5_init(), setup sokol manually, then use p5 functions in your frame loop.
+    2) Manual style (or with #define P5_NO_APP):
+    #define P5_NO_APP
+    #define P5_IMPLEMENTATION 
+    #include "p5.h"
+    
+    // Setup sokol manually, then call p5_init() and use p5 functions
+    void init() {
+        sg_setup(&(sg_desc){ .environment = sglue_environment() });
+        sgp_setup(&(sgp_desc){0});
+        p5_init();
+    }
+    
+    void frame() {
+        sgp_begin(sapp_width(), sapp_height());
+        sgp_viewport(0, 0, sapp_width(), sapp_height());
+        sgp_project(0.0f, (float)sapp_width(), 0.0f, (float)sapp_height());
+        
+        p5_background(0.1f, 0.1f, 0.2f);
+        p5_rect(100, 100, 200, 150);
+        // Use p5_ prefixed functions directly
+        
+        sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain() });
+        sgp_flush(); sgp_end(); sg_end_pass(); sg_commit();
+    }
 
 CONFIGURATION:
     #define P5_NO_SHORT_NAMES       // Disable p5.js-style short names (createCanvas, rect, etc.)
                                     // Use full names (p5_create_canvas, p5_rect, etc.) instead
+    #define P5_NO_APP               // Disable automatic app setup (P5_MAIN, setup/draw callbacks)
+                                    // Use manual sokol initialization like demo.c
 
 DEPENDENCIES:
     Requires sokol_gp.h to be included before this header
@@ -53,9 +77,11 @@ LICENSE:
 //
 //////////////////////////////////////////////////////////////////////////////
 
-// Forward declarations for callback functions
+#ifndef P5_NO_APP
+// Forward declarations for callback functions (only available when app mode is enabled)
 void setup(void);    // User-defined setup function (called once)
 void draw(void);     // User-defined draw function (called every frame)
+#endif
 
 //
 // TYPES
@@ -223,7 +249,9 @@ void p5_arc(float x, float y, float w, float h, float start, float stop);
 // CONVENIENCE MACROS
 //
 
+#ifndef P5_NO_APP
 // Convenience macro to create sokol_main (use after defining setup() and draw())
+// Only available when P5_NO_APP is not defined
 #define P5_MAIN(window_w, window_h, title_str, samples) \
     sapp_desc sokol_main(int argc, char* argv[]) { \
         sapp_desc _p5_desc = {0}; \
@@ -237,6 +265,7 @@ void p5_arc(float x, float y, float w, float h, float start, float stop);
         _p5_desc.window_title = title_str; \
         return _p5_desc; \
     }
+#endif // P5_NO_APP
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -258,18 +287,21 @@ p5_state_t p5_state;
 // INTERNAL FUNCTIONS (p5__ prefix)
 //
 
-// Sokol callback wrapper functions
+#ifndef P5_NO_APP
+// Sokol callback wrapper functions (only available when app mode is enabled)
 static void p5__sokol_init(void);
 static void p5__sokol_frame(void);
 static void p5__sokol_cleanup(void);
 static void p5__sokol_event(const sapp_event* ev);
+#endif
 
 // Internal helper functions
 static void p5__apply_transform(void);
 static void p5__restore_transform(void);
 
+#ifndef P5_NO_APP
 //
-// SOKOL WRAPPER FUNCTIONS
+// SOKOL WRAPPER FUNCTIONS (only compiled when app mode is enabled)
 //
 
 static void p5__sokol_init(void) {
@@ -320,6 +352,7 @@ static void p5__sokol_event(const sapp_event* ev) {
         }
     }
 }
+#endif // P5_NO_APP
 
 //
 // INTERNAL HELPER FUNCTIONS
