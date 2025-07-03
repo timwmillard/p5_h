@@ -86,12 +86,12 @@ void setup(void);    // Called once at startup
 void draw(void);     // Called every frame
 
 // Canvas functions
-void createCanvas(int width, int height);
-void createCanvas_positioned(int width, int height, int x, int y);
-int width(void);
-int height(void);
-int windowWidth(void);
-int windowHeight(void);
+void p5_create_canvas(int width, int height);
+void p5_create_canvas_positioned(int width, int height, int x, int y);
+int p5_width(void);
+int p5_height(void);
+int p5_window_width(void);
+int p5_window_height(void);
 void p5_background(float r, float g, float b);
 void p5_background_color(p5_color_t color);
 
@@ -127,41 +127,7 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
 void p5_arc(float x, float y, float w, float h, float start, float stop);
 
-// Convenience aliases (p5.js style)
-#define rect p5_rect
-#define square p5_square
-#define circle p5_circle
-#define ellipse p5_ellipse
-#define triangle p5_triangle
-#define quad p5_quad
-#define arc p5_arc
-#define line p5_line
-#define point p5_point
-#define background(r,g,b) p5_background(r,g,b)
-#define fill(r,g,b) p5_fill(r,g,b)
-#define stroke(r,g,b) p5_stroke(r,g,b)
-#define noFill() p5_no_fill()
-#define noStroke() p5_no_stroke()
-#define push() p5_push()
-#define pop() p5_pop()
-#define translate(x,y) p5_translate(x,y)
-#define rotate(a) p5_rotate(a)
-#define scale(s) p5_scale(s)
 
-// Convenience macro to create sokol_main (use after defining setup() and draw())
-#define P5_MAIN(w, h, t, s) \
-    sapp_desc sokol_main(int argc, char* argv[]) { \
-        return (sapp_desc) { \
-            .width = w, \
-            .height = h, \
-            .sample_count = s, \
-            .init_cb = p5_sokol_init, \
-            .frame_cb = p5_sokol_frame, \
-            .cleanup_cb = p5_sokol_cleanup, \
-            .event_cb = p5_sokol_event, \
-            .window_title = t, \
-        }; \
-    }
 
 // Math constants
 #ifndef PI
@@ -246,16 +212,16 @@ void p5_init(void) {
 }
 
 // Canvas functions
-void createCanvas(int w, int h) {
+void p5_create_canvas(int w, int h) {
     // Center the canvas in the window
     int win_w = sapp_width();
     int win_h = sapp_height();
     int x = (win_w - w) / 2;
     int y = (win_h - h) / 2;
-    createCanvas_positioned(w, h, x, y);
+    p5_create_canvas_positioned(w, h, x, y);
 }
 
-void createCanvas_positioned(int w, int h, int x, int y) {
+void p5_create_canvas_positioned(int w, int h, int x, int y) {
     // Validate canvas fits within window
     if (w <= 0 || h <= 0) return;
     if (x < 0 || y < 0) return;
@@ -268,19 +234,19 @@ void createCanvas_positioned(int w, int h, int x, int y) {
     p5_state.canvas.created = true;
 }
 
-int width(void) {
+int p5_width(void) {
     return p5_state.canvas.created ? p5_state.canvas.width : sapp_width();
 }
 
-int height(void) {
+int p5_height(void) {
     return p5_state.canvas.created ? p5_state.canvas.height : sapp_height();
 }
 
-int windowWidth(void) {
+int p5_window_width(void) {
     return sapp_width();
 }
 
-int windowHeight(void) {
+int p5_window_height(void) {
     return sapp_height();
 }
 
@@ -623,5 +589,69 @@ void p5_arc(float x, float y, float w, float h, float start, float stop) {
 }
 
 #endif // P5_IMPLEMENTATION
+
+// P5.js-style camelCase aliases (disable with #define P5_NO_SHORT_NAMES)
+#ifndef P5_NO_SHORT_NAMES
+
+// Canvas functions
+#define createCanvas p5_create_canvas
+#define createCanvasPositioned p5_create_canvas_positioned
+// Note: width() and height() are too generic and conflict with struct members
+// Use more specific names to avoid conflicts
+#define canvasWidth p5_width
+#define canvasHeight p5_height
+#define windowWidth p5_window_width
+#define windowHeight p5_window_height
+#define background(...) p5_background(__VA_ARGS__)
+#define backgroundColor p5_background_color
+
+// Color functions
+#define color p5_color
+#define colorAlpha p5_color_alpha
+#define fill(...) p5_fill(__VA_ARGS__)
+#define fillColor p5_fill_color
+#define fillAlpha p5_fill_alpha
+#define stroke(...) p5_stroke(__VA_ARGS__)
+#define strokeColor p5_stroke_color
+#define strokeAlpha p5_stroke_alpha
+#define strokeWeight p5_stroke_weight
+#define noFill p5_no_fill
+#define noStroke p5_no_stroke
+
+// Transform functions
+#define push p5_push
+#define pop p5_pop
+#define translate p5_translate
+#define rotate p5_rotate
+#define scale(...) p5_scale(__VA_ARGS__)
+#define scaleXY p5_scale_xy
+
+// Shape functions
+#define point p5_point
+#define line p5_line
+#define rect p5_rect
+#define square p5_square
+#define circle p5_circle
+#define ellipse p5_ellipse
+#define triangle p5_triangle
+#define quad p5_quad
+#define arc p5_arc
+
+#endif // P5_NO_SHORT_NAMES
+
+// Convenience macro to create sokol_main (use after defining setup() and draw())
+#define P5_MAIN(window_w, window_h, title_str, samples) \
+    sapp_desc sokol_main(int argc, char* argv[]) { \
+        sapp_desc _p5_desc = {0}; \
+        _p5_desc.width = window_w; \
+        _p5_desc.height = window_h; \
+        _p5_desc.sample_count = samples; \
+        _p5_desc.init_cb = p5_sokol_init; \
+        _p5_desc.frame_cb = p5_sokol_frame; \
+        _p5_desc.cleanup_cb = p5_sokol_cleanup; \
+        _p5_desc.event_cb = p5_sokol_event; \
+        _p5_desc.window_title = title_str; \
+        return _p5_desc; \
+    }
 
 #endif // P5_H

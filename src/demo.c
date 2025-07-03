@@ -8,6 +8,7 @@
 
 // our p5 library
 #define P5_IMPLEMENTATION
+#define P5_NO_SHORT_NAMES  // Disable aliases to avoid conflicts with sokol
 #include "../p5.h"
 
 static struct {
