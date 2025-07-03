@@ -30,6 +30,10 @@ USAGE:
     2) Manual style:
     Call p5_init(), setup sokol manually, then use p5 functions in your frame loop.
 
+CONFIGURATION:
+    #define P5_NO_SHORT_NAMES       // Disable p5.js-style short names (createCanvas, rect, etc.)
+                                    // Use full names (p5_create_canvas, p5_rect, etc.) instead
+
 DEPENDENCIES:
     Requires sokol_gp.h to be included before this header
 
@@ -43,26 +47,40 @@ LICENSE:
 #include <stdbool.h>
 #include <math.h>
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//                             PUBLIC API
+//
+//////////////////////////////////////////////////////////////////////////////
+
+// Forward declarations for callback functions
+void setup(void);    // User-defined setup function (called once)
+void draw(void);     // User-defined draw function (called every frame)
+
+//
+// TYPES
+//
+
 // Color structure
 typedef struct {
     float r, g, b, a;
 } p5_color_t;
 
-// Transform state
+// Transform state (internal)
 typedef struct {
     float tx, ty;     // translation
     float rot;        // rotation
     float sx, sy;     // scale
 } p5_transform_t;
 
-// Canvas state
+// Canvas state (internal)
 typedef struct {
     int width, height;    // Canvas dimensions
     int x, y;            // Canvas position within window
     bool created;        // Whether canvas has been created
 } p5_canvas_t;
 
-// Drawing state
+// Drawing state (internal)
 typedef struct {
     p5_color_t fill_color;
     p5_color_t stroke_color;
@@ -75,17 +93,16 @@ typedef struct {
     p5_canvas_t canvas;
 } p5_state_t;
 
-// Global state
-extern p5_state_t p5_state;
+//
+// INITIALIZATION
+//
 
-// Initialization
 void p5_init(void);
 
-// P5.js-style callback functions (user-defined)
-void setup(void);    // Called once at startup
-void draw(void);     // Called every frame
+//
+// CANVAS FUNCTIONS
+//
 
-// Canvas functions
 void p5_create_canvas(int width, int height);
 void p5_create_canvas_positioned(int width, int height, int x, int y);
 int p5_width(void);
@@ -95,7 +112,10 @@ int p5_window_height(void);
 void p5_background(float r, float g, float b);
 void p5_background_color(p5_color_t color);
 
-// Color functions
+//
+// COLOR FUNCTIONS
+//
+
 p5_color_t p5_color(float r, float g, float b);
 p5_color_t p5_color_alpha(float r, float g, float b, float a);
 void p5_fill(float r, float g, float b);
@@ -108,7 +128,10 @@ void p5_stroke_weight(float weight);
 void p5_no_fill(void);
 void p5_no_stroke(void);
 
-// Transform functions
+//
+// TRANSFORM FUNCTIONS
+//
+
 void p5_push(void);
 void p5_pop(void);
 void p5_translate(float x, float y);
@@ -116,7 +139,10 @@ void p5_rotate(float angle);
 void p5_scale(float s);
 void p5_scale_xy(float sx, float sy);
 
-// Basic shapes
+//
+// SHAPE FUNCTIONS
+//
+
 void p5_point(float x, float y);
 void p5_line(float x1, float y1, float x2, float y2);
 void p5_rect(float x, float y, float w, float h);
@@ -127,9 +153,10 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
 void p5_arc(float x, float y, float w, float h, float start, float stop);
 
+//
+// MATH CONSTANTS
+//
 
-
-// Math constants
 #ifndef PI
 #define PI 3.14159265358979323846f
 #endif
@@ -140,14 +167,112 @@ void p5_arc(float x, float y, float w, float h, float start, float stop);
 #define HALF_PI (PI * 0.5f)
 #endif
 
+//
+// P5.JS-STYLE SHORT NAMES (disable with #define P5_NO_SHORT_NAMES)
+//
+
+#ifndef P5_NO_SHORT_NAMES
+
+// Canvas functions
+#define createCanvas p5_create_canvas
+#define createCanvasPositioned p5_create_canvas_positioned
+// Note: width() and height() are too generic and conflict with struct members
+// Use more specific names to avoid conflicts
+#define canvasWidth p5_width
+#define canvasHeight p5_height
+#define windowWidth p5_window_width
+#define windowHeight p5_window_height
+#define background(...) p5_background(__VA_ARGS__)
+#define backgroundColor p5_background_color
+
+// Color functions
+#define color p5_color
+#define colorAlpha p5_color_alpha
+#define fill(...) p5_fill(__VA_ARGS__)
+#define fillColor p5_fill_color
+#define fillAlpha p5_fill_alpha
+#define stroke(...) p5_stroke(__VA_ARGS__)
+#define strokeColor p5_stroke_color
+#define strokeAlpha p5_stroke_alpha
+#define strokeWeight p5_stroke_weight
+#define noFill p5_no_fill
+#define noStroke p5_no_stroke
+
+// Transform functions
+#define push p5_push
+#define pop p5_pop
+#define translate p5_translate
+#define rotate p5_rotate
+#define scale(...) p5_scale(__VA_ARGS__)
+#define scaleXY p5_scale_xy
+
+// Shape functions
+#define point p5_point
+#define line p5_line
+#define rect p5_rect
+#define square p5_square
+#define circle p5_circle
+#define ellipse p5_ellipse
+#define triangle p5_triangle
+#define quad p5_quad
+#define arc p5_arc
+
+#endif // P5_NO_SHORT_NAMES
+
+//
+// CONVENIENCE MACROS
+//
+
+// Convenience macro to create sokol_main (use after defining setup() and draw())
+#define P5_MAIN(window_w, window_h, title_str, samples) \
+    sapp_desc sokol_main(int argc, char* argv[]) { \
+        sapp_desc _p5_desc = {0}; \
+        _p5_desc.width = window_w; \
+        _p5_desc.height = window_h; \
+        _p5_desc.sample_count = samples; \
+        _p5_desc.init_cb = p5__sokol_init; \
+        _p5_desc.frame_cb = p5__sokol_frame; \
+        _p5_desc.cleanup_cb = p5__sokol_cleanup; \
+        _p5_desc.event_cb = p5__sokol_event; \
+        _p5_desc.window_title = title_str; \
+        return _p5_desc; \
+    }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//                            IMPLEMENTATION
+//
+//////////////////////////////////////////////////////////////////////////////
+
 #ifdef P5_IMPLEMENTATION
 
 // sokol_gp.h should already be included before this header
 
+//
+// GLOBAL STATE
+//
+
 p5_state_t p5_state;
 
-// Sokol wrapper functions
-static void p5_sokol_init(void) {
+//
+// INTERNAL FUNCTIONS (p5__ prefix)
+//
+
+// Sokol callback wrapper functions
+static void p5__sokol_init(void);
+static void p5__sokol_frame(void);
+static void p5__sokol_cleanup(void);
+static void p5__sokol_event(const sapp_event* ev);
+
+// Internal helper functions
+static void p5__apply_transform(void);
+static void p5__restore_transform(void);
+
+//
+// SOKOL WRAPPER FUNCTIONS
+//
+
+static void p5__sokol_init(void) {
     sg_setup(&(sg_desc){
         .environment = sglue_environment(),
     });
@@ -157,7 +282,7 @@ static void p5_sokol_init(void) {
     setup();  // Call user setup function
 }
 
-static void p5_sokol_frame(void) {
+static void p5__sokol_frame(void) {
     sgp_begin(sapp_width(), sapp_height());
     
     // Set viewport to canvas area if canvas was created
@@ -183,18 +308,52 @@ static void p5_sokol_frame(void) {
     sg_commit();
 }
 
-static void p5_sokol_cleanup(void) {
+static void p5__sokol_cleanup(void) {
     sgp_shutdown();
     sg_shutdown();
 }
 
-static void p5_sokol_event(const sapp_event* ev) {
+static void p5__sokol_event(const sapp_event* ev) {
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) {
         if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
             sapp_quit();
         }
     }
 }
+
+//
+// INTERNAL HELPER FUNCTIONS
+//
+
+// Helper function to apply current transform
+static void p5__apply_transform(void) {
+    if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f ||
+        p5_state.transform.rot != 0.0f || 
+        p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
+        sgp_push_transform();
+        if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f) {
+            sgp_translate(p5_state.transform.tx, p5_state.transform.ty);
+        }
+        if (p5_state.transform.rot != 0.0f) {
+            sgp_rotate(p5_state.transform.rot);
+        }
+        if (p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
+            sgp_scale(p5_state.transform.sx, p5_state.transform.sy);
+        }
+    }
+}
+
+static void p5__restore_transform(void) {
+    if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f ||
+        p5_state.transform.rot != 0.0f || 
+        p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
+        sgp_pop_transform();
+    }
+}
+
+//
+// PUBLIC API IMPLEMENTATION
+//
 
 void p5_init(void) {
     p5_state.fill_color = (p5_color_t){1.0f, 1.0f, 1.0f, 1.0f};
@@ -250,34 +409,6 @@ int p5_window_height(void) {
     return sapp_height();
 }
 
-// Helper function to apply current transform
-static void p5_apply_transform(void) {
-    if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f ||
-        p5_state.transform.rot != 0.0f || 
-        p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
-        sgp_push_transform();
-        if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f) {
-            sgp_translate(p5_state.transform.tx, p5_state.transform.ty);
-        }
-        if (p5_state.transform.rot != 0.0f) {
-            sgp_rotate(p5_state.transform.rot);
-        }
-        if (p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
-            sgp_scale(p5_state.transform.sx, p5_state.transform.sy);
-        }
-    }
-}
-
-static void p5_restore_transform(void) {
-    if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f ||
-        p5_state.transform.rot != 0.0f || 
-        p5_state.transform.sx != 1.0f || p5_state.transform.sy != 1.0f) {
-        sgp_pop_transform();
-    }
-}
-
-
-// Canvas functions
 void p5_background(float r, float g, float b) {
     sgp_set_color(r, g, b, 1.0f);
     sgp_clear();
@@ -287,7 +418,6 @@ void p5_background_color(p5_color_t color) {
     sgp_set_color(color.r, color.g, color.b, color.a);
     sgp_clear();
 }
-
 
 // Color functions
 p5_color_t p5_color(float r, float g, float b) {
@@ -376,25 +506,25 @@ void p5_scale_xy(float sx, float sy) {
 
 // Basic shapes
 void p5_point(float x, float y) {
-    p5_apply_transform();
+    p5__apply_transform();
     sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                   p5_state.stroke_color.b, p5_state.stroke_color.a);
     sgp_draw_point(x, y);
-    p5_restore_transform();
+    p5__restore_transform();
 }
 
 void p5_line(float x1, float y1, float x2, float y2) {
     if (!p5_state.stroke_enabled) return;
     
-    p5_apply_transform();
+    p5__apply_transform();
     sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                   p5_state.stroke_color.b, p5_state.stroke_color.a);
     sgp_draw_line(x1, y1, x2, y2);
-    p5_restore_transform();
+    p5__restore_transform();
 }
 
 void p5_rect(float x, float y, float w, float h) {
-    p5_apply_transform();
+    p5__apply_transform();
     
     // Fill
     if (p5_state.fill_enabled) {
@@ -414,7 +544,7 @@ void p5_rect(float x, float y, float w, float h) {
         sgp_draw_line(x, y + h, x, y);         // left
     }
     
-    p5_restore_transform();
+    p5__restore_transform();
 }
 
 void p5_circle(float x, float y, float diameter) {
@@ -422,7 +552,7 @@ void p5_circle(float x, float y, float diameter) {
 }
 
 void p5_ellipse(float x, float y, float w, float h) {
-    p5_apply_transform();
+    p5__apply_transform();
     
     // Approximate ellipse with segments
     const int segments = 32;
@@ -469,11 +599,11 @@ void p5_ellipse(float x, float y, float w, float h) {
         }
     }
     
-    p5_restore_transform();
+    p5__restore_transform();
 }
 
 void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
-    p5_apply_transform();
+    p5__apply_transform();
     
     // Fill
     if (p5_state.fill_enabled) {
@@ -491,7 +621,7 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
         sgp_draw_line(x3, y3, x1, y1);
     }
     
-    p5_restore_transform();
+    p5__restore_transform();
 }
 
 void p5_square(float x, float y, float size) {
@@ -499,7 +629,7 @@ void p5_square(float x, float y, float size) {
 }
 
 void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
-    p5_apply_transform();
+    p5__apply_transform();
     
     // Fill (using two triangles)
     if (p5_state.fill_enabled) {
@@ -519,11 +649,11 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
         sgp_draw_line(x4, y4, x1, y1);
     }
     
-    p5_restore_transform();
+    p5__restore_transform();
 }
 
 void p5_arc(float x, float y, float w, float h, float start, float stop) {
-    p5_apply_transform();
+    p5__apply_transform();
     
     const int segments = 32;
     float rx = w * 0.5f;
@@ -585,73 +715,9 @@ void p5_arc(float x, float y, float w, float h, float start, float stop) {
         sgp_draw_line(start_x, start_y, stop_x, stop_y);
     }
     
-    p5_restore_transform();
+    p5__restore_transform();
 }
 
 #endif // P5_IMPLEMENTATION
-
-// P5.js-style camelCase aliases (disable with #define P5_NO_SHORT_NAMES)
-#ifndef P5_NO_SHORT_NAMES
-
-// Canvas functions
-#define createCanvas p5_create_canvas
-#define createCanvasPositioned p5_create_canvas_positioned
-// Note: width() and height() are too generic and conflict with struct members
-// Use more specific names to avoid conflicts
-#define canvasWidth p5_width
-#define canvasHeight p5_height
-#define windowWidth p5_window_width
-#define windowHeight p5_window_height
-#define background(...) p5_background(__VA_ARGS__)
-#define backgroundColor p5_background_color
-
-// Color functions
-#define color p5_color
-#define colorAlpha p5_color_alpha
-#define fill(...) p5_fill(__VA_ARGS__)
-#define fillColor p5_fill_color
-#define fillAlpha p5_fill_alpha
-#define stroke(...) p5_stroke(__VA_ARGS__)
-#define strokeColor p5_stroke_color
-#define strokeAlpha p5_stroke_alpha
-#define strokeWeight p5_stroke_weight
-#define noFill p5_no_fill
-#define noStroke p5_no_stroke
-
-// Transform functions
-#define push p5_push
-#define pop p5_pop
-#define translate p5_translate
-#define rotate p5_rotate
-#define scale(...) p5_scale(__VA_ARGS__)
-#define scaleXY p5_scale_xy
-
-// Shape functions
-#define point p5_point
-#define line p5_line
-#define rect p5_rect
-#define square p5_square
-#define circle p5_circle
-#define ellipse p5_ellipse
-#define triangle p5_triangle
-#define quad p5_quad
-#define arc p5_arc
-
-#endif // P5_NO_SHORT_NAMES
-
-// Convenience macro to create sokol_main (use after defining setup() and draw())
-#define P5_MAIN(window_w, window_h, title_str, samples) \
-    sapp_desc sokol_main(int argc, char* argv[]) { \
-        sapp_desc _p5_desc = {0}; \
-        _p5_desc.width = window_w; \
-        _p5_desc.height = window_h; \
-        _p5_desc.sample_count = samples; \
-        _p5_desc.init_cb = p5_sokol_init; \
-        _p5_desc.frame_cb = p5_sokol_frame; \
-        _p5_desc.cleanup_cb = p5_sokol_cleanup; \
-        _p5_desc.event_cb = p5_sokol_event; \
-        _p5_desc.window_title = title_str; \
-        return _p5_desc; \
-    }
 
 #endif // P5_H
