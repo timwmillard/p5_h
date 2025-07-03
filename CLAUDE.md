@@ -16,6 +16,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `make sokol_gp` - Download sokol_gp graphics painter library
 - `make compile_flags.txt` - Generate IDE support file
 
+All build binaries end up the root directory.  Ensure these are added to .gitignore.
+
 ## Architecture Overview
 
 This is a single-header C library (p5.h) that provides p5.js-like creative coding functionality using the Sokol graphics framework. It enables artists and developers to create graphics applications using familiar p5.js syntax.
