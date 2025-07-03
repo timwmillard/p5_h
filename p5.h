@@ -199,49 +199,50 @@ void p5_arc(float x, float y, float w, float h, float start, float stop);
 
 #ifndef P5_NO_SHORT_NAMES
 
+// Type aliases
+typedef p5_color_t Color;
+
 // Canvas functions
-#define createCanvas p5_create_canvas
-#define createCanvasPositioned p5_create_canvas_positioned
-// Note: width() and height() are too generic and conflict with struct members
-// Use more specific names to avoid conflicts
-#define canvasWidth p5_width
-#define canvasHeight p5_height
-#define windowWidth p5_window_width
-#define windowHeight p5_window_height
-#define background(...) p5_background(__VA_ARGS__)
-#define backgroundColor p5_background_color
+static inline void createCanvas(int width, int height) { p5_create_canvas(width, height); }
+static inline void createCanvasPositioned(int width, int height, int x, int y) { p5_create_canvas_positioned(width, height, x, y); }
+static inline int width(void) { return p5_width(); }
+static inline int height(void) { return p5_height(); }
+static inline int windowWidth(void) { return p5_window_width(); }
+static inline int windowHeight(void) { return p5_window_height(); }
+static inline void background(float r, float g, float b) { p5_background(r, g, b); }
+static inline void backgroundColor(Color color) { p5_background_color(color); }
 
 // Color functions
-#define color p5_color
-#define colorAlpha p5_color_alpha
-#define fill(...) p5_fill(__VA_ARGS__)
-#define fillColor p5_fill_color
-#define fillAlpha p5_fill_alpha
-#define stroke(...) p5_stroke(__VA_ARGS__)
-#define strokeColor p5_stroke_color
-#define strokeAlpha p5_stroke_alpha
-#define strokeWeight p5_stroke_weight
-#define noFill p5_no_fill
-#define noStroke p5_no_stroke
+static inline Color color(float r, float g, float b) { return p5_color(r, g, b); }
+static inline Color colorAlpha(float r, float g, float b, float a) { return p5_color_alpha(r, g, b, a); }
+static inline void fill(float r, float g, float b) { p5_fill(r, g, b); }
+static inline void fillColor(Color color) { p5_fill_color(color); }
+static inline void fillAlpha(float r, float g, float b, float a) { p5_fill_alpha(r, g, b, a); }
+static inline void stroke(float r, float g, float b) { p5_stroke(r, g, b); }
+static inline void strokeColor(Color color) { p5_stroke_color(color); }
+static inline void strokeAlpha(float r, float g, float b, float a) { p5_stroke_alpha(r, g, b, a); }
+static inline void strokeWeight(float weight) { p5_stroke_weight(weight); }
+static inline void noFill(void) { p5_no_fill(); }
+static inline void noStroke(void) { p5_no_stroke(); }
 
 // Transform functions
-#define push p5_push
-#define pop p5_pop
-#define translate p5_translate
-#define rotate p5_rotate
-#define scale(...) p5_scale(__VA_ARGS__)
-#define scaleXY p5_scale_xy
+static inline void push(void) { p5_push(); }
+static inline void pop(void) { p5_pop(); }
+static inline void translate(float x, float y) { p5_translate(x, y); }
+static inline void rotate(float angle) { p5_rotate(angle); }
+static inline void scale(float s) { p5_scale(s); }
+static inline void scaleXY(float sx, float sy) { p5_scale_xy(sx, sy); }
 
 // Shape functions
-#define point p5_point
-#define line p5_line
-#define rect p5_rect
-#define square p5_square
-#define circle p5_circle
-#define ellipse p5_ellipse
-#define triangle p5_triangle
-#define quad p5_quad
-#define arc p5_arc
+static inline void point(float x, float y) { p5_point(x, y); }
+static inline void line(float x1, float y1, float x2, float y2) { p5_line(x1, y1, x2, y2); }
+static inline void rect(float x, float y, float w, float h) { p5_rect(x, y, w, h); }
+static inline void square(float x, float y, float size) { p5_square(x, y, size); }
+static inline void circle(float x, float y, float diameter) { p5_circle(x, y, diameter); }
+static inline void ellipse(float x, float y, float w, float h) { p5_ellipse(x, y, w, h); }
+static inline void triangle(float x1, float y1, float x2, float y2, float x3, float y3) { p5_triangle(x1, y1, x2, y2, x3, y3); }
+static inline void quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) { p5_quad(x1, y1, x2, y2, x3, y3, x4, y4); }
+static inline void arc(float x, float y, float w, float h, float start, float stop) { p5_arc(x, y, w, h, start, stop); }
 
 #endif // P5_NO_SHORT_NAMES
 

@@ -18,7 +18,7 @@ void setup() {
     createCanvas(400, 300);
     
     printf("Window: %dx%d\n", windowWidth(), windowHeight());
-    printf("Canvas: %dx%d\n", p5_width(), p5_height());
+    printf("Canvas: %dx%d\n", width(), height());
 }
 
 void draw() {
@@ -30,11 +30,11 @@ void draw() {
     // Draw a border around the canvas to show its bounds
     p5_no_fill();
     p5_stroke(1.0f, 1.0f, 1.0f);
-    p5_rect(2, 2, p5_width()-4, p5_height()-4);
+    p5_rect(2, 2, width()-4, height()-4);
     
     // Animated circle that bounces within canvas bounds
-    float x = p5_width()/2 + 100 * sinf(time);
-    float y = p5_height()/2 + 50 * cosf(time * 1.5f);
+    float x = width()/2 + 100 * sinf(time);
+    float y = height()/2 + 50 * cosf(time * 1.5f);
     
     p5_fill(1.0f, 0.5f, 0.2f);
     p5_no_stroke();
@@ -47,9 +47,9 @@ void draw() {
     // Corner markers to show canvas bounds
     p5_fill(1.0f, 0.0f, 0.0f);
     p5_rect(0, 0, 10, 10);                    // Top-left
-    p5_rect(p5_width()-10, 0, 10, 10);           // Top-right  
-    p5_rect(0, p5_height()-10, 10, 10);          // Bottom-left
-    p5_rect(p5_width()-10, p5_height()-10, 10, 10); // Bottom-right
+    p5_rect(width()-10, 0, 10, 10);           // Top-right  
+    p5_rect(0, height()-10, 10, 10);          // Bottom-left
+    p5_rect(width()-10, height()-10, 10, 10); // Bottom-right
 }
 
 // 800x600 window with 4x antialiasing
