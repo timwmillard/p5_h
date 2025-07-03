@@ -3,7 +3,6 @@ test_utils.c - Implementation of testing utilities for p5.h library
 */
 
 #include "test_utils.h"
-#include "test_renderer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

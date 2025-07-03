@@ -16,6 +16,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `make sokol_gp` - Download sokol_gp graphics painter library
 - `make compile_flags.txt` - Generate IDE support file
 
+## Test Commands
+
+- `make run_tests` - Run complete test suite (canvas + visual tests)
+- `make run_test_simple_visual` - Run visual regression tests only  
+- `make run_test_canvas` - Run canvas API tests only
+- `make tests` - Build all tests without running
+- `make clean_tests` - Clean test artifacts
+
 All build binaries end up the root directory.  Ensure these are added to .gitignore.
 
 ## Architecture Overview

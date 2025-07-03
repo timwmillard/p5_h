@@ -6,5 +6,18 @@
 /canvas
 /shapes
 
+# Test binaries
+/test_basic_shapes
+/test_colors
+/test_transforms
+/test_canvas
+/test_basic_shapes_visual
+/test_simple_visual
+
+# Test output files
+tests/test_output_*.png
+
 compile_flags.txt
+
+.DS_Store
 

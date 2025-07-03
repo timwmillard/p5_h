@@ -18,6 +18,22 @@ This directory contains comprehensive tests for the p5.h graphics library using 
 - `golden/` - Reference images for visual regression testing
 - Test images are automatically created on first run if golden images don't exist
 
+## Test Organization
+
+The test framework is organized in the `tests/` directory with its own Makefile:
+
+```
+tests/
+├── Makefile              # Test-specific build targets
+├── README.md             # This file
+├── golden/               # Golden reference images
+├── simple_deps.c         # Minimal dependencies (STB image only)
+├── test_deps.c           # Full Sokol dependencies
+├── test_utils.h/c        # Test framework utilities
+├── test_renderer.h/c     # Offscreen rendering (future)
+└── test_*.c              # Individual test files
+```
+
 ## Running Tests
 
 ### Build and run all tests:
@@ -32,7 +48,8 @@ make tests
 
 ### Run individual test suites:
 ```bash
-make run_test_canvas        # ✅ Working
+make run_test_simple_visual # ✅ Working - Visual regression tests
+make run_test_canvas        # ✅ Working - Canvas API tests
 make run_test_basic_shapes  # 🚧 Future (requires full sokol setup)
 make run_test_colors        # 🚧 Future (requires full sokol setup)  
 make run_test_transforms    # 🚧 Future (requires full sokol setup)
