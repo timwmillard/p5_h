@@ -249,7 +249,6 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
 #define PIE P5_PIE
 
 // Named color constants
-#define STEELBLUE p5_parse_color_string("steelblue")
 
 #define COLOR p5_parse_color_string
 
@@ -276,8 +275,6 @@ static inline void stroke(float r, float g, float b) { p5_stroke(r, g, b); }
 static inline void strokeColor(Color color) { p5_stroke_color(color); }
 static inline void strokeAlpha(float r, float g, float b, float a) { p5_stroke_alpha(r, g, b, a); }
 static inline void strokeWeight(float weight) { p5_stroke_weight(weight); }
-static inline void stroke_hex(const char* hex_string) { p5_stroke_hex(hex_string); }
-static inline void background_color(p5_color_t color) { p5_background_color(color); }
 static inline void noFill(void) { p5_no_fill(); }
 static inline void noStroke(void) { p5_no_stroke(); }
 static inline void angleMode(p5_angle_mode_t mode) { p5_angle_mode(mode); }
@@ -714,12 +711,6 @@ p5_color_t p5_parse_color_string(const char* color_str) {
     } else {
         return p5__parse_named_color(color_str);
     }
-}
-
-// Hex string stroke function
-void p5_stroke_hex(const char* hex_string) {
-    p5_color_t color = p5_parse_color_string(hex_string);
-    p5_stroke_color(color);
 }
 
 // Named color background function

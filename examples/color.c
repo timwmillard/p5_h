@@ -18,7 +18,7 @@ void setup() {
   // CSS color name
   // For a list of available color names, see:
   // https://www.w3.org/wiki/CSS/Properties/color/keywords
-  background_color(STEELBLUE);
+  backgroundColor(COLOR("steelblue"));
 
   // Set width of stroke to 4 units
   strokeWeight(4);
@@ -93,7 +93,7 @@ void setup() {
   // Hex string
   // This is a set of red, green, blue values
   // Encoded in base 16
-  stroke_hex("#EFD8D8");
+  strokeColor(COLOR("#EFD8D8"));
 
   // Draw without inner color
   noFill();
