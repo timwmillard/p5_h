@@ -35,29 +35,29 @@ spinner() {
 
 # Print functions
 print_header() {
-    echo -e "${BOLD}${MAGENTA}╭─────────────────────────────────────────────────────╮${RESET}"
-    echo -e "${BOLD}${MAGENTA}│${RESET}                  ${BOLD}${CYAN}🎨 p5.h Creator${RESET}                  ${BOLD}${MAGENTA}│${RESET}"
-    echo -e "${BOLD}${MAGENTA}╰─────────────────────────────────────────────────────╯${RESET}"
+    printf "${BOLD}${MAGENTA}╭─────────────────────────────────────────────────────╮${RESET}\n"
+    printf "${BOLD}${MAGENTA}│${RESET}                  ${BOLD}${CYAN}🎨 p5.h Creator${RESET}                    ${BOLD}${MAGENTA}│${RESET}\n"
+    printf "${BOLD}${MAGENTA}╰─────────────────────────────────────────────────────╯${RESET}\n"
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${RESET}"
+    printf "${GREEN}✅ $1${RESET}\n"
 }
 
 print_error() {
-    echo -e "${RED}❌ Error: $1${RESET}"
+    printf "${RED}❌ Error: $1${RESET}\n"
 }
 
 print_info() {
-    echo -e "${BLUE}ℹ️  $1${RESET}"
+    printf "${BLUE}ℹ️  $1${RESET}\n"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${RESET}"
+    printf "${YELLOW}⚠️  $1${RESET}\n"
 }
 
 print_step() {
-    echo -e "${BOLD}${WHITE}🔄 $1${RESET}"
+    printf "${BOLD}${WHITE}🔄 $1${RESET}\n"
 }
 
 DEST_PATH="."
@@ -154,29 +154,29 @@ print_success "Project created successfully!"
 echo ""
 
 # Success box
-echo -e "${BOLD}${GREEN}╭─────────────────────────────────────────────────────╮${RESET}"
-echo -e "${BOLD}${GREEN}│${RESET}                   ${BOLD}🎉 All Done!${RESET}                    ${BOLD}${GREEN}│${RESET}"
-echo -e "${BOLD}${GREEN}╰─────────────────────────────────────────────────────╯${RESET}"
+printf "${BOLD}${GREEN}╭─────────────────────────────────────────────────────╮${RESET}\n"
+printf "${BOLD}${GREEN}│${RESET}                   ${BOLD}🎉 All Done!${RESET}                      ${BOLD}${GREEN}│${RESET}\n"
+printf "${BOLD}${GREEN}╰─────────────────────────────────────────────────────╯${RESET}\n"
 echo ""
 
 print_info "📍 ${BOLD}Next Steps:${RESET}"
-echo -e "   ${CYAN}1.${RESET} ${BOLD}cd $FULL_DEST${RESET}"
-echo -e "   ${CYAN}2.${RESET} ${BOLD}make help${RESET}  ${GRAY}# View build options${RESET}"
+printf "   ${CYAN}1.${RESET} ${BOLD}cd $FULL_DEST${RESET}\n"
+printf "   ${CYAN}2.${RESET} ${BOLD}make help${RESET}  ${GRAY}# View build options${RESET}\n"
 echo ""
 
 print_info "✏️  ${BOLD}Edit your canvas:${RESET}"
-echo -e "   ${BOLD}vim canvas.c${RESET}  ${GRAY}# or use your favorite editor${RESET}"
+printf "   ${BOLD}vim canvas.c${RESET}  ${GRAY}# or use your favorite editor${RESET}\n"
 echo ""
 
 print_info "🔨 ${BOLD}Build and run:${RESET}"
-echo -e "   ${BOLD}make${RESET}        ${GRAY}# Build the project${RESET}"
-echo -e "   ${BOLD}./canvas${RESET}    ${GRAY}# Run your creation${RESET}"
+printf "   ${BOLD}make${RESET}        ${GRAY}# Build the project${RESET}\n"
+printf "   ${BOLD}./canvas${RESET}    ${GRAY}# Run your creation${RESET}\n"
 echo ""
 
 print_info "🌐 ${BOLD}For web builds:${RESET}"
-echo -e "   ${BOLD}make web TARGET=canvas${RESET}  ${GRAY}# Build for web${RESET}"
+printf "   ${BOLD}make web TARGET=canvas${RESET}  ${GRAY}# Build for web${RESET}\n"
 echo ""
 
-echo -e "${DIM}Happy coding! 🚀${RESET}"
+printf "${DIM}Happy coding! 🚀${RESET}\n"
 echo ""
 
