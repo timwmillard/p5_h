@@ -321,6 +321,8 @@ static inline void arcWithMode(float x, float y, float w, float h, float start, 
 // Only available when P5_NO_APP is not defined
 #define P5_MAIN(window_w, window_h, title_str) \
     sapp_desc sokol_main(int argc, char* argv[]) { \
+        argc; \
+        argv; \
         sapp_desc _p5_desc = {0}; \
         _p5_desc.width = window_w; \
         _p5_desc.height = window_h; \
@@ -584,10 +586,6 @@ void p5_stroke_alpha(unsigned int r, unsigned int g, unsigned int b, unsigned in
 
 void p5_stroke_weight(float weight) {
     p5_state.stroke_width = weight;
-}
-
-void p5_stroke_hex(const char* hex_string) {
-    TODO("p5_stroke_hex not implemented - should parse hex string and set stroke color");
 }
 
 void p5_no_fill(void) {

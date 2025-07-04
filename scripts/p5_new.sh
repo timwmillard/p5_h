@@ -67,16 +67,20 @@ $DOWNLOADER "$FULL_DEST/deps/p5.h" https://raw.githubusercontent.com/timwmillard
 
 # Download build scripts from timwmillard GitHub
 echo "  Downloading Makefile..."
-$DOWNLOADER "$FULL_DEST/Makefile" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/p5_new/template/Makefile
+$DOWNLOADER "$FULL_DEST/Makefile" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/Makefile
 
 echo "  Downloading canvas.c..."
-$DOWNLOADER "$FULL_DEST/canvas.c" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/p5_new/template/canvas.c
+$DOWNLOADER "$FULL_DEST/canvas.c" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/canvas
+
+echo "  Downloading shell.html..."
+$DOWNLOADER "$FULL_DEST/deps/shell.html" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/shell.html
 
 echo ""
 echo "Project created successfully!"
 echo ""
 echo "To get started:"
 echo "  cd $FULL_DEST"
+echo "  make help"
 echo ""
 echo "Edit the canvas:"
 echo "  vim canvas.c"
@@ -85,6 +89,6 @@ echo "Then build:"
 echo "  make"
 echo ""
 echo "Then run:"
-echo "  make run"
+echo "  ./canvas"
 echo ""
 

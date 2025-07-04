@@ -12,7 +12,7 @@
 
 // p5 library with implementation
 #define P5_IMPLEMENTATION
-#include "../p5.h"
+#include "p5.h"
 
 
 void setup() {
