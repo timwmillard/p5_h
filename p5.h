@@ -65,6 +65,19 @@ LICENSE:
     Public Domain
 */
 
+
+#ifdef P5_SOKOL
+// sokol dependencies
+#define SOKOL_IMPL
+#include "sokol_app.h"
+#include "sokol_gfx.h"
+#include "sokol_glue.h"
+#define SOKOL_GP_IMPL
+#include "sokol_gp.h"
+#define P5_IMPLEMENTATION
+#endif // P5_SOKOL
+
+
 #ifndef P5_H
 #define P5_H
 
