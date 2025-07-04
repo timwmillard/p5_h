@@ -70,6 +70,7 @@ LICENSE:
 
 #include <stdbool.h>
 #include <math.h>
+#include <string.h>
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -91,6 +92,26 @@ void draw(void);     // User-defined draw function (called every frame)
 typedef struct {
     float r, g, b, a;
 } p5_color_t;
+
+// Angle mode enumeration
+typedef enum {
+    P5_DEGREES,
+    P5_RADIANS
+} p5_angle_mode_t;
+
+// Color mode enumeration
+typedef enum {
+    P5_RGB,
+    P5_HSB,
+    P5_HSL
+} p5_color_mode_t;
+
+// Arc mode enumeration
+typedef enum {
+    P5_OPEN,
+    P5_CHORD,
+    P5_PIE
+} p5_arc_mode_t;
 
 // Transform state (internal)
 typedef struct {
@@ -119,6 +140,9 @@ typedef struct {
     p5_canvas_t canvas;
     bool setup_has_drawn;  // Internal flag for p5.js compatibility  
     bool in_setup_mode;    // Currently executing setup() - for p5.js compatibility
+    p5_angle_mode_t angle_mode;
+    p5_color_mode_t color_mode;
+    float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
 } p5_state_t;
 
 //
@@ -153,8 +177,15 @@ void p5_stroke(float r, float g, float b);
 void p5_stroke_color(p5_color_t color);
 void p5_stroke_alpha(float r, float g, float b, float a);
 void p5_stroke_weight(float weight);
+void p5_stroke_hex(const char* hex_string);
+void p5_background_named(const char* color_name);
 void p5_no_fill(void);
 void p5_no_stroke(void);
+void p5_angle_mode(p5_angle_mode_t mode);
+void p5_color_mode(p5_color_mode_t mode);
+void p5_color_mode_range(p5_color_mode_t mode, float max1, float max2, float max3, float maxA);
+void p5_text_output(void);
+p5_color_t p5_parse_color_string(const char* color_str);
 
 //
 // TRANSFORM FUNCTIONS
@@ -180,6 +211,8 @@ void p5_ellipse(float x, float y, float w, float h);
 void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
 void p5_arc(float x, float y, float w, float h, float start, float stop);
+void p5_arc_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode);
+void p5_arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode);
 
 //
 // MATH CONSTANTS
@@ -200,6 +233,25 @@ void p5_arc(float x, float y, float w, float h, float start, float stop);
 //
 
 #ifndef P5_NO_SHORT_NAMES
+
+// Angle mode constants
+#define DEGREES P5_DEGREES
+#define RADIANS P5_RADIANS
+
+// Color mode constants
+#define RGB P5_RGB
+#define HSB P5_HSB
+#define HSL P5_HSL
+
+// Arc mode constants
+#define OPEN P5_OPEN
+#define CHORD P5_CHORD
+#define PIE P5_PIE
+
+// Named color constants
+#define STEELBLUE p5_parse_color_string("steelblue")
+
+#define COLOR p5_parse_color_string
 
 // Type aliases
 typedef p5_color_t Color;
@@ -224,8 +276,13 @@ static inline void stroke(float r, float g, float b) { p5_stroke(r, g, b); }
 static inline void strokeColor(Color color) { p5_stroke_color(color); }
 static inline void strokeAlpha(float r, float g, float b, float a) { p5_stroke_alpha(r, g, b, a); }
 static inline void strokeWeight(float weight) { p5_stroke_weight(weight); }
+static inline void stroke_hex(const char* hex_string) { p5_stroke_hex(hex_string); }
+static inline void background_color(p5_color_t color) { p5_background_color(color); }
 static inline void noFill(void) { p5_no_fill(); }
 static inline void noStroke(void) { p5_no_stroke(); }
+static inline void angleMode(p5_angle_mode_t mode) { p5_angle_mode(mode); }
+static inline void colorMode(p5_color_mode_t mode) { p5_color_mode(mode); }
+static inline void textOutput(void) { p5_text_output(); }
 
 // Transform functions
 static inline void push(void) { p5_push(); }
@@ -244,7 +301,10 @@ static inline void circle(float x, float y, float diameter) { p5_circle(x, y, di
 static inline void ellipse(float x, float y, float w, float h) { p5_ellipse(x, y, w, h); }
 static inline void triangle(float x1, float y1, float x2, float y2, float x3, float y3) { p5_triangle(x1, y1, x2, y2, x3, y3); }
 static inline void quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) { p5_quad(x1, y1, x2, y2, x3, y3, x4, y4); }
+// Note: In p5.js, arc() with 7 parameters includes mode, but C doesn't support function overloading
+// Use arc() for default CHORD mode, or arcWithMode() for specific modes
 static inline void arc(float x, float y, float w, float h, float start, float stop) { p5_arc(x, y, w, h, start, stop); }
+static inline void arcWithMode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) { p5_arc_with_mode(x, y, w, h, start, stop, mode); }
 
 #endif // P5_NO_SHORT_NAMES
 
@@ -419,6 +479,12 @@ void p5_init(void) {
     p5_state.canvas.y = 0;
     p5_state.setup_has_drawn = false;  // Initialize p5.js compatibility flag
     p5_state.in_setup_mode = false;    // Not in setup initially
+    p5_state.angle_mode = P5_RADIANS;  // Default to radians like p5.js
+    p5_state.color_mode = P5_RGB;      // Default to RGB
+    p5_state.color_maxes[0] = 255.0f;  // R max
+    p5_state.color_maxes[1] = 255.0f;  // G max
+    p5_state.color_maxes[2] = 255.0f;  // B max
+    p5_state.color_maxes[3] = 255.0f;  // A max
 }
 
 // Canvas functions
@@ -522,6 +588,144 @@ void p5_no_fill(void) {
 
 void p5_no_stroke(void) {
     p5_state.stroke_enabled = false;
+}
+
+// Angle mode functions
+void p5_angle_mode(p5_angle_mode_t mode) {
+    p5_state.angle_mode = mode;
+}
+
+// Color mode functions
+void p5_color_mode(p5_color_mode_t mode) {
+    p5_state.color_mode = mode;
+    // Set default maximums based on color mode
+    if (mode == P5_RGB) {
+        p5_state.color_maxes[0] = 255.0f;  // R
+        p5_state.color_maxes[1] = 255.0f;  // G
+        p5_state.color_maxes[2] = 255.0f;  // B
+        p5_state.color_maxes[3] = 255.0f;  // A
+    } else if (mode == P5_HSB || mode == P5_HSL) {
+        p5_state.color_maxes[0] = 360.0f;  // H
+        p5_state.color_maxes[1] = 100.0f;  // S
+        p5_state.color_maxes[2] = 100.0f;  // B/L
+        p5_state.color_maxes[3] = 100.0f;  // A
+    }
+}
+
+void p5_color_mode_range(p5_color_mode_t mode, float max1, float max2, float max3, float maxA) {
+    p5_state.color_mode = mode;
+    p5_state.color_maxes[0] = max1;
+    p5_state.color_maxes[1] = max2;
+    p5_state.color_maxes[2] = max3;
+    p5_state.color_maxes[3] = maxA;
+}
+
+// Text output function (stub for accessibility)
+void p5_text_output(void) {
+    // This is a stub - in a full implementation this would create
+    // screen reader accessible descriptions of the canvas content
+    // For now, we just acknowledge the call
+}
+
+// Helper function to parse hex color strings
+static int p5__hex_char_to_int(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    return 0;
+}
+
+static p5_color_t p5__parse_hex_color(const char* hex) {
+    p5_color_t color = {0.0f, 0.0f, 0.0f, 1.0f};
+    int len = strlen(hex);
+    
+    if (len == 0 || hex[0] != '#') return color;
+    
+    if (len == 4) { // #RGB
+        int r = p5__hex_char_to_int(hex[1]);
+        int g = p5__hex_char_to_int(hex[2]);
+        int b = p5__hex_char_to_int(hex[3]);
+        color.r = (r * 16 + r) / 255.0f;
+        color.g = (g * 16 + g) / 255.0f;
+        color.b = (b * 16 + b) / 255.0f;
+    } else if (len == 7) { // #RRGGBB
+        int r = p5__hex_char_to_int(hex[1]) * 16 + p5__hex_char_to_int(hex[2]);
+        int g = p5__hex_char_to_int(hex[3]) * 16 + p5__hex_char_to_int(hex[4]);
+        int b = p5__hex_char_to_int(hex[5]) * 16 + p5__hex_char_to_int(hex[6]);
+        color.r = r / 255.0f;
+        color.g = g / 255.0f;
+        color.b = b / 255.0f;
+    } else if (len == 5) { // #RGBA
+        int r = p5__hex_char_to_int(hex[1]);
+        int g = p5__hex_char_to_int(hex[2]);
+        int b = p5__hex_char_to_int(hex[3]);
+        int a = p5__hex_char_to_int(hex[4]);
+        color.r = (r * 16 + r) / 255.0f;
+        color.g = (g * 16 + g) / 255.0f;
+        color.b = (b * 16 + b) / 255.0f;
+        color.a = (a * 16 + a) / 255.0f;
+    } else if (len == 9) { // #RRGGBBAA
+        int r = p5__hex_char_to_int(hex[1]) * 16 + p5__hex_char_to_int(hex[2]);
+        int g = p5__hex_char_to_int(hex[3]) * 16 + p5__hex_char_to_int(hex[4]);
+        int b = p5__hex_char_to_int(hex[5]) * 16 + p5__hex_char_to_int(hex[6]);
+        int a = p5__hex_char_to_int(hex[7]) * 16 + p5__hex_char_to_int(hex[8]);
+        color.r = r / 255.0f;
+        color.g = g / 255.0f;
+        color.b = b / 255.0f;
+        color.a = a / 255.0f;
+    }
+    
+    return color;
+}
+
+// Named color lookup (subset of CSS colors)
+static p5_color_t p5__parse_named_color(const char* name) {
+    // Convert to lowercase for case-insensitive comparison
+    char lower_name[32];
+    int i = 0;
+    while (name[i] && i < 31) {
+        lower_name[i] = (name[i] >= 'A' && name[i] <= 'Z') ? name[i] + 32 : name[i];
+        i++;
+    }
+    lower_name[i] = '\0';
+    
+    // Common named colors used in p5.js examples
+    if (strcmp(lower_name, "steelblue") == 0) return p5__parse_hex_color("#4682b4");
+    if (strcmp(lower_name, "red") == 0) return p5__parse_hex_color("#ff0000");
+    if (strcmp(lower_name, "green") == 0) return p5__parse_hex_color("#008000");
+    if (strcmp(lower_name, "blue") == 0) return p5__parse_hex_color("#0000ff");
+    if (strcmp(lower_name, "white") == 0) return p5__parse_hex_color("#ffffff");
+    if (strcmp(lower_name, "black") == 0) return p5__parse_hex_color("#000000");
+    if (strcmp(lower_name, "gray") == 0) return p5__parse_hex_color("#808080");
+    if (strcmp(lower_name, "grey") == 0) return p5__parse_hex_color("#808080");
+    if (strcmp(lower_name, "yellow") == 0) return p5__parse_hex_color("#ffff00");
+    if (strcmp(lower_name, "orange") == 0) return p5__parse_hex_color("#ffa500");
+    if (strcmp(lower_name, "purple") == 0) return p5__parse_hex_color("#800080");
+    if (strcmp(lower_name, "pink") == 0) return p5__parse_hex_color("#ffc0cb");
+    
+    // Default to white if color not found
+    return p5__parse_hex_color("#ffffff");
+}
+
+// Public color parsing function
+p5_color_t p5_parse_color_string(const char* color_str) {
+    if (color_str[0] == '#') {
+        return p5__parse_hex_color(color_str);
+    } else {
+        return p5__parse_named_color(color_str);
+    }
+}
+
+// Hex string stroke function
+void p5_stroke_hex(const char* hex_string) {
+    p5_color_t color = p5_parse_color_string(hex_string);
+    p5_stroke_color(color);
+}
+
+// Named color background function
+void p5_background_named(const char* color_name) {
+    p5_color_t color = p5_parse_color_string(color_name);
+    p5_background_color(color);
 }
 
 // Transform functions
@@ -707,6 +911,14 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
 }
 
 void p5_arc(float x, float y, float w, float h, float start, float stop) {
+    p5_arc_with_mode(x, y, w, h, start, stop, P5_CHORD);
+}
+
+void p5_arc_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) {
+    p5_arc_with_mode(x, y, w, h, start, stop, mode);
+}
+
+void p5_arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) {
     p5__apply_transform();
     
     const int segments = 32;
@@ -715,9 +927,9 @@ void p5_arc(float x, float y, float w, float h, float start, float stop) {
     float cx = x + rx;
     float cy = y + ry;
     
-    // Convert angles to radians (assuming degrees like p5.js)
-    float start_rad = start * PI / 180.0f;
-    float stop_rad = stop * PI / 180.0f;
+    // Convert angles based on current angle mode
+    float start_rad = (p5_state.angle_mode == P5_DEGREES) ? start * PI / 180.0f : start;
+    float stop_rad = (p5_state.angle_mode == P5_DEGREES) ? stop * PI / 180.0f : stop;
     float angle_range = stop_rad - start_rad;
     
     // Fill
@@ -761,12 +973,21 @@ void p5_arc(float x, float y, float w, float h, float start, float stop) {
             sgp_draw_line(x1, y1, x2, y2);
         }
         
-        // Draw closing lines for CHORD mode (default)
+        // Draw closing lines based on arc mode
         float start_x = cx + cosf(start_rad) * rx;
         float start_y = cy + sinf(start_rad) * ry;
         float stop_x = cx + cosf(stop_rad) * rx;
         float stop_y = cy + sinf(stop_rad) * ry;
-        sgp_draw_line(start_x, start_y, stop_x, stop_y);
+        
+        if (mode == P5_CHORD) {
+            // Connect arc endpoints with straight line
+            sgp_draw_line(start_x, start_y, stop_x, stop_y);
+        } else if (mode == P5_PIE) {
+            // Connect arc endpoints to center
+            sgp_draw_line(cx, cy, start_x, start_y);
+            sgp_draw_line(cx, cy, stop_x, stop_y);
+        }
+        // P5_OPEN mode draws no closing lines
     }
     
     p5__restore_transform();

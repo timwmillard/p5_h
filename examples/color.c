@@ -10,17 +10,15 @@
 
 void setup() {
   // Create screen reader accessible description
-  // textOutput();
+  textOutput();
 
   createCanvas(720, 400);
-  // angleMode(DEGREES);
+  angleMode(DEGREES);
 
   // CSS color name
   // For a list of available color names, see:
   // https://www.w3.org/wiki/CSS/Properties/color/keywords
-  // background('steelblue');
-  // background('steelblue');
-  background(0.4, 0.4, 1);
+  background_color(STEELBLUE);
 
   // Set width of stroke to 4 units
   strokeWeight(4);
@@ -44,7 +42,7 @@ void setup() {
 
   // Hue, saturation, and brightness values
   // On scales of 0-360°, 0-100%, and 0-100% respectively
-  // colorMode(HSB);
+  colorMode(HSB);
 
   // Light green
   fill(120, 70, 90);
@@ -65,20 +63,20 @@ void setup() {
   // This is similar to HSB (above),
   // but whereas 100% brightness is the brightest version of that hue,
   // 100% lightness is always white.
-  // colorMode(HSL);
+  colorMode(HSL);
 
   // Light green
   fill(120, 70, 90);
 
   // Dark green
   stroke(120, 60, 30);
-  arc(540, 100, 300, 100, 180, 360);
+  arcWithMode(540, 100, 300, 100, 180, 360, CHORD);
 
   // Save current settings
   push();
 
   // Switch back to red, green, blue color mode
-  // colorMode(RGB);
+  colorMode(RGB);
 
   // Navy blue
   stroke(20, 10, 80);
@@ -95,7 +93,7 @@ void setup() {
   // Hex string
   // This is a set of red, green, blue values
   // Encoded in base 16
-  // stroke('#EFD8D8');
+  stroke_hex("#EFD8D8");
 
   // Draw without inner color
   noFill();
