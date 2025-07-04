@@ -23,14 +23,14 @@ void draw() {
     time += 1.0f/60.0f;
     
     // Background
-    p5_background(0.1f, 0.1f, 0.2f);
+    p5_background(25, 25, 50);
     
     // Animated rotating rectangle (responsive to canvas size)
     p5_push();
     p5_translate(width()/2, height()/2);
     p5_rotate(time);
-    p5_fill(1.0f, 0.5f, 0.2f);
-    p5_stroke(1.0f, 1.0f, 1.0f);
+    p5_fill(255, 128, 50);
+    p5_stroke(255, 255, 255);
     p5_rect(-50.0f, -30.0f, 100.0f, 60.0f);
     p5_pop();
     
@@ -42,7 +42,7 @@ void draw() {
         float g = 0.5f + 0.5f * sinf(time + i);
         float b = 0.8f;
         
-        p5_fill(r, g, b);
+        p5_fill((unsigned int)(r * 255), (unsigned int)(g * 255), (unsigned int)(b * 255));
         p5_no_stroke();
         p5_circle(x, y, 40.0f);
     }
@@ -51,8 +51,8 @@ void draw() {
     p5_push();
     p5_translate(width()/2, height() - 80);
     p5_scale(1.5f + 0.5f * sinf(time * 2.0f));
-    p5_fill(0.2f, 1.0f, 0.5f);
-    p5_stroke(0.0f, 0.0f, 0.0f);
+    p5_fill(50, 255, 128);
+    p5_stroke(0, 0, 0);
     p5_triangle(-30.0f, 15.0f, 30.0f, 15.0f, 0.0f, -20.0f);
     p5_pop();
 }
