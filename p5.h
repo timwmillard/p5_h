@@ -71,6 +71,13 @@ LICENSE:
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
+
+// TODO macro for unimplemented functions
+#define TODO(msg) do { \
+    printf("[WARNING] TODO: %s (function: %s, file: %s, line: %d)\n", \
+           msg, __func__, __FILE__, __LINE__); \
+} while(0)
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -579,6 +586,10 @@ void p5_stroke_weight(float weight) {
     p5_state.stroke_width = weight;
 }
 
+void p5_stroke_hex(const char* hex_string) {
+    TODO("p5_stroke_hex not implemented - should parse hex string and set stroke color");
+}
+
 void p5_no_fill(void) {
     p5_state.fill_enabled = false;
 }
@@ -621,7 +632,7 @@ void p5_color_mode_range(p5_color_mode_t mode, float max1, float max2, float max
 void p5_text_output(void) {
     // This is a stub - in a full implementation this would create
     // screen reader accessible descriptions of the canvas content
-    // For now, we just acknowledge the call
+    TODO("p5_text_output not implemented");
 }
 
 // Helper function to parse hex color strings
