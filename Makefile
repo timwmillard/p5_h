@@ -50,6 +50,9 @@ examples/shape_primitives: examples/shape_primitives.c p5.h deps/deps.o
 examples/color: examples/color.c p5.h deps/deps.o
 	clang -o examples/color $(CFLAGS) $(LIBS) deps/deps.o examples/color.c
 
+examples/point: examples/point.c p5.h deps/deps.o
+	clang -o examples/point $(CFLAGS) $(LIBS) deps/deps.o examples/point.c
+
 run: demo
 	@./demo
 
@@ -79,6 +82,9 @@ run_p5js_seamless: p5js_seamless
 
 run_color: examples/color
 	@./examples/color
+
+run_point: examples/point
+	@./examples/point
 
 compile_flags.txt: FORCE
 	@echo "Generating compile_flags.txt for IDE support"

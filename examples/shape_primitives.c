@@ -16,7 +16,7 @@ void setup() {
 
   // Use degrees as units for angles
   // The arc() function uses angles
-  // angleMode(DEGREES);
+  angleMode(DEGREES);
 
   // Draw a light gray background
   background(220, 220, 220);
