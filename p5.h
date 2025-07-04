@@ -829,8 +829,8 @@ void p5_ellipse(float x, float y, float w, float h) {
     const int segments = 32;
     float rx = w * 0.5f;
     float ry = h * 0.5f;
-    float cx = x + rx;
-    float cy = y + ry;
+    float cx = x;
+    float cy = y;
     
     // Fill
     if (p5_state.fill_enabled) {
@@ -937,8 +937,8 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
     const int segments = 32;
     float rx = w * 0.5f;
     float ry = h * 0.5f;
-    float cx = x + rx;
-    float cy = y + ry;
+    float cx = x;
+    float cy = y;
     
     // Convert angles based on current angle mode
     float start_rad = (p5_state.angle_mode == P5_DEGREES) ? start * PI / 180.0f : start;
