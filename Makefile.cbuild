@@ -1,0 +1,41 @@
+# Makefile for cbuild tool
+# This builds the C-based npm-like build tool
+
+CC = clang
+CFLAGS = -Wall -Wextra -std=c99
+LIBS = -llua -lcurl
+
+# Check if we're on macOS and add Homebrew paths
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    # Add Homebrew paths for macOS
+    CFLAGS += -I/opt/homebrew/include -I/usr/local/include
+    LIBS += -L/opt/homebrew/lib -L/usr/local/lib
+endif
+
+cbuild: cbuild.c
+	$(CC) $(CFLAGS) -o cbuild cbuild.c $(LIBS)
+
+install_deps:
+	@echo "Installing dependencies for cbuild..."
+	@if command -v brew >/dev/null 2>&1; then \
+		echo "Installing lua and curl via Homebrew..."; \
+		brew install lua curl; \
+	elif command -v apt-get >/dev/null 2>&1; then \
+		echo "Installing lua and curl via apt..."; \
+		sudo apt-get update && sudo apt-get install -y liblua5.3-dev libcurl4-openssl-dev; \
+	elif command -v yum >/dev/null 2>&1; then \
+		echo "Installing lua and curl via yum..."; \
+		sudo yum install -y lua-devel libcurl-devel; \
+	else \
+		echo "Please install lua and curl development libraries manually"; \
+		exit 1; \
+	fi
+
+clean:
+	rm -f cbuild
+
+test: cbuild
+	./cbuild help
+
+.PHONY: install_deps clean test
