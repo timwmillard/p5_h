@@ -49,29 +49,28 @@ else
     exit 1
 fi
 
-# Download sokol headers
+# Download dependencies from timwmillard Github
 echo "  Downloading sokol_app.h..."
-$DOWNLOADER "$FULL_DEST/deps/sokol_app.h" https://raw.githubusercontent.com/timwmillard/p5/refs/heads/master/deps/sokol_app.h
+$DOWNLOADER "$FULL_DEST/deps/sokol_app.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_app.h
 
 echo "  Downloading sokol_gfx.h..."
-$DOWNLOADER "$FULL_DEST/deps/sokol_gfx.h" https://raw.githubusercontent.com/timwmillard/p5/refs/heads/master/deps/sokol_gfx.h
+$DOWNLOADER "$FULL_DEST/deps/sokol_gfx.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_gfx.h
 
 echo "  Downloading sokol_glue.h..."
-$DOWNLOADER "$FULL_DEST/deps/sokol_glue.h" https://raw.githubusercontent.com/timwmillard/p5/refs/heads/master/deps/sokol_glue.h
+$DOWNLOADER "$FULL_DEST/deps/sokol_glue.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_glue.h
 
 echo "  Downloading sokol_gp.h..."
-$DOWNLOADER "$FULL_DEST/deps/sokol_gp.h" https://raw.githubusercontent.com/timwmillard/p5/refs/heads/master/deps/sokol_gp.h
+$DOWNLOADER "$FULL_DEST/deps/sokol_gp.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_gp.h
 
-# Download p5.h from timwmillard GitHub
 echo "  Downloading p5.h..."
-$DOWNLOADER "$FULL_DEST/deps/p5.h.h" https://raw.githubusercontent.com/timwmillard/p5/refs/heads/master/p5.h
+$DOWNLOADER "$FULL_DEST/deps/p5.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/p5.h
 
 # Download build scripts from timwmillard GitHub
 echo "  Downloading Makefile..."
-$DOWNLOADER "$FULL_DEST/Makefile" https://raw.githubusercontent.com/timwmillard/p5/refs/heads/p5_new/Makefile
+$DOWNLOADER "$FULL_DEST/Makefile" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/p5_new/template/Makefile
 
 echo "  Downloading canvas.c..."
-$DOWNLOADER "$FULL_DEST/canvas.c" https://raw.githubusercontent.com/timwmillard/p5/refs/heads/p5_new/canvas.c
+$DOWNLOADER "$FULL_DEST/canvas.c" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/p5_new/template/canvas.c
 
 echo ""
 echo "Project created successfully!"
