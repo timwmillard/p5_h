@@ -1,18 +1,76 @@
 #!/bin/bash
 
-# p5.h project creator
+# 🎨 p5.h project creator
 # Usage: ./p5new.sh <project_name> [dest_path]
 
 set -e
 
+# Terminal colors and formatting
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+GRAY='\033[0;90m'
+BOLD='\033[1m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+# Progress spinner
+spinner() {
+    local pid=$1
+    local delay=0.1
+    local spinstr='|/-\'
+    printf " "
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spinstr#?}
+        printf "\r  ${CYAN}[${spinstr:0:1}]${RESET}"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+    done
+    printf "\r  ${GREEN}[✓]${RESET}"
+}
+
+# Print functions
+print_header() {
+    echo -e "${BOLD}${MAGENTA}╭─────────────────────────────────────────────────────╮${RESET}"
+    echo -e "${BOLD}${MAGENTA}│${RESET}                  ${BOLD}${CYAN}🎨 p5.h Creator${RESET}                  ${BOLD}${MAGENTA}│${RESET}"
+    echo -e "${BOLD}${MAGENTA}╰─────────────────────────────────────────────────────╯${RESET}"
+}
+
+print_success() {
+    echo -e "${GREEN}✅ $1${RESET}"
+}
+
+print_error() {
+    echo -e "${RED}❌ Error: $1${RESET}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${RESET}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${RESET}"
+}
+
+print_step() {
+    echo -e "${BOLD}${WHITE}🔄 $1${RESET}"
+}
+
 DEST_PATH="."
 
 # Parse arguments
+print_header
+echo ""
+
 if [ $# -ge 1 ]; then
     PROJECT_NAME="$1"
 else
-    echo "Error: missing project name"
-    echo "Usage: p5new <project_name>"
+    print_error "Missing project name"
+    print_info "Usage: ${BOLD}p5new <project_name>${RESET}"
     exit 1
 fi
 
@@ -24,71 +82,101 @@ fi
 FULL_DEST="$DEST_PATH/$PROJECT_NAME"
 
 # Create project directory
-echo "Creating new p5.h project: $PROJECT_NAME"
-echo "Destination: $FULL_DEST"
+print_step "Creating new p5.h project: ${BOLD}${GREEN}$PROJECT_NAME${RESET}"
+print_info "Destination: ${CYAN}$FULL_DEST${RESET}"
+echo ""
 
 if [ -d "$FULL_DEST" ]; then
-    echo "Error: Directory $FULL_DEST already exists"
+    print_error "Directory ${CYAN}$FULL_DEST${RESET} already exists"
     exit 1
 fi
 
 # Create deps directory
+print_step "Setting up project structure..."
 mkdir -p "$FULL_DEST/deps"
+print_success "Created project directory"
 
 # Download dependencies from GitHub
-echo "Downloading dependencies from GitHub..."
+print_step "Downloading dependencies from GitHub..."
+echo ""
 
 # Check if wget or curl is available
 if command -v wget >/dev/null 2>&1; then
-    DOWNLOADER="wget -O"
+    DOWNLOADER="wget -q -O"
+    DOWNLOADER_NAME="wget"
 elif command -v curl >/dev/null 2>&1; then
-    DOWNLOADER="curl -L -o"
+    DOWNLOADER="curl -s -L -o"
+    DOWNLOADER_NAME="curl"
 else
-    echo "Error: Neither wget nor curl is available"
-    echo "Please install wget or curl to download dependencies"
+    print_error "Neither wget nor curl is available"
+    print_info "Please install wget or curl to download dependencies"
     exit 1
 fi
 
+print_info "Using ${BOLD}${CYAN}$DOWNLOADER_NAME${RESET} to download files"
+echo ""
+
 # Download dependencies from timwmillard Github
-echo "  Downloading sokol_app.h..."
-$DOWNLOADER "$FULL_DEST/deps/sokol_app.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_app.h
+download_file() {
+    local filename="$1"
+    local url="$2"
+    local dest="$3"
+    
+    printf "  📦 ${CYAN}%-15s${RESET} " "$filename"
+    $DOWNLOADER "$dest" "$url" 2>/dev/null
+    if [ $? -eq 0 ]; then
+        printf "${GREEN}✓${RESET}\n"
+    else
+        printf "${RED}✗${RESET}\n"
+        print_error "Failed to download $filename"
+        exit 1
+    fi
+}
 
-echo "  Downloading sokol_gfx.h..."
-$DOWNLOADER "$FULL_DEST/deps/sokol_gfx.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_gfx.h
-
-echo "  Downloading sokol_glue.h..."
-$DOWNLOADER "$FULL_DEST/deps/sokol_glue.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_glue.h
-
-echo "  Downloading sokol_gp.h..."
-$DOWNLOADER "$FULL_DEST/deps/sokol_gp.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_gp.h
-
-echo "  Downloading p5.h..."
-$DOWNLOADER "$FULL_DEST/deps/p5.h" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/p5.h
-
-# Download build scripts from timwmillard GitHub
-echo "  Downloading Makefile..."
-$DOWNLOADER "$FULL_DEST/Makefile" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/Makefile
-
-echo "  Downloading canvas.c..."
-$DOWNLOADER "$FULL_DEST/canvas.c" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/canvas
-
-echo "  Downloading shell.html..."
-$DOWNLOADER "$FULL_DEST/deps/shell.html" https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/shell.html
+print_info "📚 Downloading Sokol dependencies..."
+download_file "sokol_app.h" "https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_app.h" "$FULL_DEST/deps/sokol_app.h"
+download_file "sokol_gfx.h" "https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_gfx.h" "$FULL_DEST/deps/sokol_gfx.h"
+download_file "sokol_glue.h" "https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_glue.h" "$FULL_DEST/deps/sokol_glue.h"
+download_file "sokol_gp.h" "https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_gp.h" "$FULL_DEST/deps/sokol_gp.h"
 
 echo ""
-echo "Project created successfully!"
+print_info "🎨 Downloading p5.h library..."
+download_file "p5.h" "https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/p5.h" "$FULL_DEST/deps/p5.h"
+
 echo ""
-echo "To get started:"
-echo "  cd $FULL_DEST"
-echo "  make help"
+print_info "🔧 Downloading build scripts..."
+download_file "Makefile" "https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/Makefile" "$FULL_DEST/Makefile"
+download_file "canvas.c" "https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/canvas.c" "$FULL_DEST/canvas.c"
+download_file "shell.html" "https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/scripts/shell.html" "$FULL_DEST/deps/shell.html"
+
 echo ""
-echo "Edit the canvas:"
-echo "  vim canvas.c"
+print_success "Project created successfully!"
 echo ""
-echo "Then build:"
-echo "  make"
+
+# Success box
+echo -e "${BOLD}${GREEN}╭─────────────────────────────────────────────────────╮${RESET}"
+echo -e "${BOLD}${GREEN}│${RESET}                   ${BOLD}🎉 All Done!${RESET}                    ${BOLD}${GREEN}│${RESET}"
+echo -e "${BOLD}${GREEN}╰─────────────────────────────────────────────────────╯${RESET}"
 echo ""
-echo "Then run:"
-echo "  ./canvas"
+
+print_info "📍 ${BOLD}Next Steps:${RESET}"
+echo -e "   ${CYAN}1.${RESET} ${BOLD}cd $FULL_DEST${RESET}"
+echo -e "   ${CYAN}2.${RESET} ${BOLD}make help${RESET}  ${GRAY}# View build options${RESET}"
+echo ""
+
+print_info "✏️  ${BOLD}Edit your canvas:${RESET}"
+echo -e "   ${BOLD}vim canvas.c${RESET}  ${GRAY}# or use your favorite editor${RESET}"
+echo ""
+
+print_info "🔨 ${BOLD}Build and run:${RESET}"
+echo -e "   ${BOLD}make${RESET}        ${GRAY}# Build the project${RESET}"
+echo -e "   ${BOLD}./canvas${RESET}    ${GRAY}# Run your creation${RESET}"
+echo ""
+
+print_info "🌐 ${BOLD}For web builds:${RESET}"
+echo -e "   ${BOLD}make web TARGET=canvas${RESET}  ${GRAY}# Build for web${RESET}"
+echo ""
+
+echo -e "${DIM}Happy coding! 🚀${RESET}"
 echo ""
 
