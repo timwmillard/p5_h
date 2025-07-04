@@ -49,7 +49,7 @@ print_error() {
 }
 
 print_info() {
-    printf "${BLUE}ℹ️  $1${RESET}\n"
+    printf "${BLUE}$1${RESET}\n"
 }
 
 print_warning() {
@@ -57,7 +57,7 @@ print_warning() {
 }
 
 print_step() {
-    printf "${BOLD}${WHITE}🔄 $1${RESET}\n"
+    printf "${BOLD}${WHITE}$1${RESET}\n"
 }
 
 DEST_PATH="."
@@ -95,6 +95,7 @@ fi
 print_step "Setting up project structure..."
 mkdir -p "$FULL_DEST/deps"
 print_success "Created project directory"
+echo ""
 
 # Download dependencies from GitHub
 print_step "Downloading dependencies from GitHub..."
