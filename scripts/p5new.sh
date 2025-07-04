@@ -124,11 +124,29 @@ download_file() {
     local dest="$3"
     
     printf "  📦 ${CYAN}%-15s${RESET} " "$filename"
-    $DOWNLOADER "$dest" "$url" 2>/dev/null
-    if [ $? -eq 0 ]; then
-        printf "${GREEN}✓${RESET}\n"
+    
+    # Start download in background and show spinner
+    $DOWNLOADER "$dest" "$url" 2>/dev/null &
+    local download_pid=$!
+    
+    # Spinner animation
+    local spinner_chars="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    local i=0
+    while kill -0 $download_pid 2>/dev/null; do
+        local char=${spinner_chars:$i:1}
+        printf "\r  📦 ${CYAN}%-15s${RESET} ${YELLOW}$char${RESET}" "$filename"
+        i=$(( (i + 1) % 10 ))
+        sleep 0.1
+    done
+    
+    # Wait for download to complete and check result
+    wait $download_pid
+    local result=$?
+    
+    if [ $result -eq 0 ]; then
+        printf "\r  📦 ${CYAN}%-15s${RESET} ${GREEN}✓${RESET}\n" "$filename"
     else
-        printf "${RED}✗${RESET}\n"
+        printf "\r  📦 ${CYAN}%-15s${RESET} ${RED}✗${RESET}\n" "$filename"
         print_error "Failed to download $filename"
         exit 1
     fi
