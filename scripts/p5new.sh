@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # p5.h project creator
-# Usage: ./p5_new.sh <project_name> [dest_path]
+# Usage: ./p5new.sh <project_name> [dest_path]
 
 set -e
 
@@ -12,7 +12,7 @@ if [ $# -ge 1 ]; then
     PROJECT_NAME="$1"
 else
     echo "Error: missing project name"
-    echo "Usage: p5_new <project_name>"
+    echo "Usage: p5new <project_name>"
     exit 1
 fi
 
