@@ -133,6 +133,12 @@ typedef enum {
     P5_PIE
 } p5_arc_mode_t;
 
+// Text output display mode enumeration
+typedef enum {
+    P5_FALLBACK,
+    P5_LABEL
+} p5_text_output_mode_t;
+
 //
 // INITIALIZATION
 //
@@ -173,6 +179,8 @@ void p5_angle_mode(p5_angle_mode_t mode);
 void p5_color_mode(p5_color_mode_t mode);
 void p5_color_mode_range(p5_color_mode_t mode, float max1, float max2, float max3, float maxA);
 void p5_text_output(void);
+void p5_text_output_mode(p5_text_output_mode_t display_mode);
+void p5_describe_canvas(void);
 p5_color_t p5_parse_color_string(const char* color_str);
 
 //
@@ -236,6 +244,10 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
 #define CHORD P5_CHORD
 #define PIE P5_PIE
 
+// Text output display mode constants
+#define FALLBACK P5_FALLBACK
+#define LABEL P5_LABEL
+
 // Named color constants
 
 #define COLOR p5_parse_color_string
@@ -268,6 +280,8 @@ static inline void noStroke(void) { p5_no_stroke(); }
 static inline void angleMode(p5_angle_mode_t mode) { p5_angle_mode(mode); }
 static inline void colorMode(p5_color_mode_t mode) { p5_color_mode(mode); }
 static inline void textOutput(void) { p5_text_output(); }
+static inline void textOutputMode(p5_text_output_mode_t display_mode) { p5_text_output_mode(display_mode); }
+static inline void describeCanvas(void) { p5_describe_canvas(); }
 
 // Transform functions
 static inline void push(void) { p5_push(); }
@@ -339,6 +353,16 @@ typedef struct {
     bool created;        // Whether canvas has been created
 } p5_canvas_t;
 
+// Shape tracking for accessibility (internal)
+typedef struct {
+    const char* type;
+    float x, y, w, h;
+    p5_color_t fill_color;
+    p5_color_t stroke_color;
+    bool fill_enabled;
+    bool stroke_enabled;
+} p5_shape_t;
+
 // Drawing state (internal)
 typedef struct {
     p5_color_t fill_color;
@@ -355,6 +379,12 @@ typedef struct {
     p5_angle_mode_t angle_mode;
     p5_color_mode_t color_mode;
     float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
+    
+    // Accessibility state
+    bool text_output_enabled;
+    bool text_output_label_mode;
+    p5_shape_t shapes[256];  // Track shapes for accessibility
+    int shape_count;
 } p5_state_t;
 
 
@@ -491,6 +521,11 @@ void p5_init(void) {
     p5_state.color_maxes[1] = 255.0f;  // G max
     p5_state.color_maxes[2] = 255.0f;  // B max
     p5_state.color_maxes[3] = 255.0f;  // A max
+    
+    // Initialize accessibility state
+    p5_state.text_output_enabled = false;
+    p5_state.text_output_label_mode = false;
+    p5_state.shape_count = 0;
 }
 
 // Canvas functions
@@ -626,11 +661,105 @@ void p5_color_mode_range(p5_color_mode_t mode, float max1, float max2, float max
     p5_state.color_maxes[3] = maxA;
 }
 
-// Text output function (stub for accessibility)
+// Internal helper functions for accessibility
+static void p5__track_shape(const char* type, float x, float y, float w, float h) {
+    if (!p5_state.text_output_enabled || p5_state.shape_count >= 256) return;
+    
+    p5_shape_t* shape = &p5_state.shapes[p5_state.shape_count++];
+    shape->type = type;
+    shape->x = x;
+    shape->y = y;
+    shape->w = w;
+    shape->h = h;
+    shape->fill_color = p5_state.fill_color;
+    shape->stroke_color = p5_state.stroke_color;
+    shape->fill_enabled = p5_state.fill_enabled;
+    shape->stroke_enabled = p5_state.stroke_enabled;
+}
+
+static const char* p5__get_color_name(p5_color_t color) {
+    // Simple color name mapping for common colors
+    if (color.r == 1.0f && color.g == 0.0f && color.b == 0.0f) return "red";
+    if (color.r == 0.0f && color.g == 1.0f && color.b == 0.0f) return "green";  
+    if (color.r == 0.0f && color.g == 0.0f && color.b == 1.0f) return "blue";
+    if (color.r == 1.0f && color.g == 1.0f && color.b == 0.0f) return "yellow";
+    if (color.r == 1.0f && color.g == 0.0f && color.b == 1.0f) return "magenta";
+    if (color.r == 0.0f && color.g == 1.0f && color.b == 1.0f) return "cyan";
+    if (color.r == 1.0f && color.g == 1.0f && color.b == 1.0f) return "white";
+    if (color.r == 0.0f && color.g == 0.0f && color.b == 0.0f) return "black";
+    if (color.r > 0.4f && color.g > 0.4f && color.b > 0.4f) return "light gray";
+    if (color.r < 0.3f && color.g < 0.3f && color.b < 0.3f) return "dark gray";
+    return "colored";
+}
+
+static const char* p5__get_location_description(float x, float y, float canvas_w, float canvas_h) {
+    float center_x = canvas_w / 2.0f;
+    float center_y = canvas_h / 2.0f;
+    float threshold = 50.0f;
+    
+    if (fabs(x - center_x) < threshold && fabs(y - center_y) < threshold) {
+        return "center";
+    } else if (x < center_x / 2.0f) {
+        return y < center_y / 2.0f ? "top left" : (y > center_y * 1.5f ? "bottom left" : "left");
+    } else if (x > center_x * 1.5f) {
+        return y < center_y / 2.0f ? "top right" : (y > center_y * 1.5f ? "bottom right" : "right");
+    } else {
+        return y < center_y / 2.0f ? "top" : (y > center_y * 1.5f ? "bottom" : "middle");
+    }
+}
+
+static float p5__calculate_area_percentage(float w, float h, float canvas_w, float canvas_h) {
+    if (canvas_w <= 0 || canvas_h <= 0) return 0.0f;
+    float shape_area = w * h;
+    float canvas_area = canvas_w * canvas_h;
+    return (shape_area / canvas_area) * 100.0f;
+}
+
+static void p5__output_accessibility_description(void) {
+    if (!p5_state.text_output_enabled) return;
+    
+    FILE* output = p5_state.text_output_label_mode ? stdout : stderr;
+    int canvas_w = p5_width();
+    int canvas_h = p5_height();
+    
+    // General description
+    fprintf(output, "Canvas description: %d by %d pixels canvas containing %d shapes:\n", 
+            canvas_w, canvas_h, p5_state.shape_count);
+    
+    // Shape list
+    for (int i = 0; i < p5_state.shape_count; i++) {
+        p5_shape_t* shape = &p5_state.shapes[i];
+        const char* color_name = p5__get_color_name(shape->fill_enabled ? shape->fill_color : shape->stroke_color);
+        const char* location = p5__get_location_description(shape->x, shape->y, canvas_w, canvas_h);
+        float area_pct = p5__calculate_area_percentage(shape->w, shape->h, canvas_w, canvas_h);
+        
+        fprintf(output, "Shape %d: %s %s at %s covering %.1f%% of canvas\n", 
+                i + 1, color_name, shape->type, location, area_pct);
+    }
+    fprintf(output, "\n");
+}
+
+// Text output functions
 void p5_text_output(void) {
-    // This is a stub - in a full implementation this would create
-    // screen reader accessible descriptions of the canvas content
-    TODO("p5_text_output not implemented");
+    p5_text_output_mode(P5_FALLBACK);
+}
+
+void p5_text_output_mode(p5_text_output_mode_t display_mode) {
+    if (p5_state.text_output_enabled) return;  // Already enabled
+    
+    p5_state.text_output_enabled = true;
+    p5_state.text_output_label_mode = (display_mode == P5_LABEL);
+    p5_state.shape_count = 0;  // Reset shape tracking
+    
+    if (p5_state.text_output_label_mode) {
+        printf("Text output accessibility mode enabled (LABEL mode - visible output)\n");
+    } else {
+        fprintf(stderr, "Text output accessibility mode enabled (FALLBACK mode - screen reader only)\n");
+    }
+}
+
+void p5_describe_canvas(void) {
+    p5__output_accessibility_description();
 }
 
 // Helper function to parse hex color strings
@@ -784,6 +913,11 @@ void p5_line(float x1, float y1, float x2, float y2) {
 void p5_rect(float x, float y, float w, float h) {
     p5__apply_transform();
     
+    // Track shape for accessibility (only if not a square, squares are tracked separately)
+    if (w != h) {  // Only track if it's not a square (squares are tracked separately)
+        p5__track_shape("rectangle", x, y, w, h);
+    }
+    
     // Fill
     if (p5_state.fill_enabled) {
         sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
@@ -806,11 +940,17 @@ void p5_rect(float x, float y, float w, float h) {
 }
 
 void p5_circle(float x, float y, float diameter) {
+    p5__track_shape("circle", x, y, diameter, diameter);
     p5_ellipse(x, y, diameter, diameter);
 }
 
 void p5_ellipse(float x, float y, float w, float h) {
     p5__apply_transform();
+    
+    // Track shape for accessibility (only if not already tracked by p5_circle)
+    if (w != h) {  // Only track if it's not a circle (circles are tracked separately)
+        p5__track_shape("ellipse", x, y, w, h);
+    }
     
     // Approximate ellipse with segments
     const int segments = 32;
@@ -863,6 +1003,13 @@ void p5_ellipse(float x, float y, float w, float h) {
 void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
     p5__apply_transform();
     
+    // Track shape for accessibility (use bounding box for triangle)
+    float min_x = fminf(fminf(x1, x2), x3);
+    float max_x = fmaxf(fmaxf(x1, x2), x3);
+    float min_y = fminf(fminf(y1, y2), y3);
+    float max_y = fmaxf(fmaxf(y1, y2), y3);
+    p5__track_shape("triangle", min_x, min_y, max_x - min_x, max_y - min_y);
+    
     // Fill
     if (p5_state.fill_enabled) {
         sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
@@ -883,11 +1030,19 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
 }
 
 void p5_square(float x, float y, float size) {
+    p5__track_shape("square", x, y, size, size);
     p5_rect(x, y, size, size);
 }
 
 void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
     p5__apply_transform();
+    
+    // Track shape for accessibility (use bounding box for quad)
+    float min_x = fminf(fminf(fminf(x1, x2), x3), x4);
+    float max_x = fmaxf(fmaxf(fmaxf(x1, x2), x3), x4);
+    float min_y = fminf(fminf(fminf(y1, y2), y3), y4);
+    float max_y = fmaxf(fmaxf(fmaxf(y1, y2), y3), y4);
+    p5__track_shape("quad", min_x, min_y, max_x - min_x, max_y - min_y);
     
     // Fill (using two triangles)
     if (p5_state.fill_enabled) {
