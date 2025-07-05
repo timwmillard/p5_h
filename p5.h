@@ -85,6 +85,7 @@ LICENSE:
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // TODO macro for unimplemented functions
 #define TODO(msg) do { \
@@ -487,20 +488,21 @@ static void p5__draw_thick_polygon_outline(float* points, int num_points, float 
         sgp_draw_filled_triangle(x1b, y1b, x2b, y2b, x2a, y2a);
     }
     
-    // Draw corner caps to fill gaps
-    for (int i = 0; i < line_count; i++) {
-        int prev = (i - 1 + num_points) % num_points;
-        int curr = i;
-        int next = (i + 1) % num_points;
-        
-        // Skip if not a real corner (for open paths at endpoints)
+    // Draw corner joints to fill gaps (using smaller, more precise caps)
+    for (int i = 0; i < num_points; i++) {
         if (!closed && (i == 0 || i == num_points - 1)) continue;
         
-        float px = points[prev*2], py = points[prev*2+1];
-        float cx = points[curr*2], cy = points[curr*2+1];
-        float nx = points[next*2], ny = points[next*2+1];
+        int prev_idx = closed ? (i - 1 + num_points) % num_points : (i > 0 ? i - 1 : i);
+        int next_idx = closed ? (i + 1) % num_points : (i < num_points - 1 ? i + 1 : i);
         
-        // Calculate vectors from corner to adjacent points
+        float px = points[prev_idx*2], py = points[prev_idx*2+1];
+        float cx = points[i*2], cy = points[i*2+1];
+        float nx = points[next_idx*2], ny = points[next_idx*2+1];
+        
+        // Skip if same points
+        if ((px == cx && py == cy) || (nx == cx && ny == cy)) continue;
+        
+        // Calculate vectors from corner
         float v1x = px - cx, v1y = py - cy;
         float v2x = nx - cx, v2y = ny - cy;
         
@@ -513,9 +515,16 @@ static void p5__draw_thick_polygon_outline(float* points, int num_points, float 
         v1x /= len1; v1y /= len1;
         v2x /= len2; v2y /= len2;
         
-        // Draw a small filled circle at the corner to cover gaps
-        float radius = thickness * 0.5f;
-        sgp_draw_filled_rect(cx - radius, cy - radius, thickness, thickness);
+        // Calculate angle between lines
+        float dot = v1x * v2x + v1y * v2y;
+        float angle = acosf(fmaxf(-1.0f, fminf(1.0f, dot)));
+        
+        // Only add joint if there's a significant angle (avoid nearly straight lines)
+        if (angle > 0.1f && angle < PI - 0.1f) {
+            // Draw a smaller cap - just enough to cover the gap
+            float cap_size = thickness * 0.3f; // Much smaller than before
+            sgp_draw_filled_rect(cx - cap_size, cy - cap_size, cap_size * 2, cap_size * 2);
+        }
     }
 }
 
@@ -936,12 +945,20 @@ void p5_circle(float x, float y, float diameter) {
 void p5_ellipse(float x, float y, float w, float h) {
     p5__apply_transform();
     
-    // Approximate ellipse with segments
-    const int segments = 32;
+    // Calculate segment count based on size and stroke weight for better quality
     float rx = w * 0.5f;
     float ry = h * 0.5f;
     float cx = x;
     float cy = y;
+    
+    // Dynamic segment count: more segments for larger ellipses and thicker strokes
+    float circumference = PI * (3.0f * (rx + ry) - sqrtf((3.0f * rx + ry) * (rx + 3.0f * ry)));
+    int base_segments = (int)(circumference / 8.0f); // Base: one segment per 8 pixels of circumference
+    if (p5_state.stroke_enabled && p5_state.stroke_width > 4.0f) {
+        // Add extra segments for thick strokes to prevent gaps
+        base_segments += (int)(p5_state.stroke_width / 2.0f);
+    }
+    const int segments = fmaxf(16, fminf(128, base_segments)); // Clamp between 16-128 segments
     
     // Fill
     if (p5_state.fill_enabled) {
@@ -967,17 +984,48 @@ void p5_ellipse(float x, float y, float w, float h) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         
-        // Draw ellipse outline using thick line segments
-        for (int i = 0; i < segments; i++) {
-            float angle1 = (float)i / segments * TWO_PI;
-            float angle2 = (float)(i + 1) / segments * TWO_PI;
+        if (p5_state.stroke_width <= 1.0f) {
+            // Use thin line segments for thin strokes
+            for (int i = 0; i < segments; i++) {
+                float angle1 = (float)i / segments * TWO_PI;
+                float angle2 = (float)(i + 1) / segments * TWO_PI;
+                
+                float x1 = cx + cosf(angle1) * rx;
+                float y1 = cy + sinf(angle1) * ry;
+                float x2 = cx + cosf(angle2) * rx;
+                float y2 = cy + sinf(angle2) * ry;
+                
+                sgp_draw_line(x1, y1, x2, y2);
+            }
+        } else {
+            // Draw thick stroke as annulus (ring) - outer ellipse minus inner ellipse
+            float half_stroke = p5_state.stroke_width * 0.5f;
+            float outer_rx = rx + half_stroke;
+            float outer_ry = ry + half_stroke;
+            float inner_rx = fmaxf(0.1f, rx - half_stroke);
+            float inner_ry = fmaxf(0.1f, ry - half_stroke);
             
-            float x1 = cx + cosf(angle1) * rx;
-            float y1 = cy + sinf(angle1) * ry;
-            float x2 = cx + cosf(angle2) * rx;
-            float y2 = cy + sinf(angle2) * ry;
-            
-            p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
+            // Draw outer ellipse as filled triangular segments
+            for (int i = 0; i < segments; i++) {
+                float angle1 = (float)i / segments * TWO_PI;
+                float angle2 = (float)(i + 1) / segments * TWO_PI;
+                
+                // Outer ellipse points
+                float ox1 = cx + cosf(angle1) * outer_rx;
+                float oy1 = cy + sinf(angle1) * outer_ry;
+                float ox2 = cx + cosf(angle2) * outer_rx;
+                float oy2 = cy + sinf(angle2) * outer_ry;
+                
+                // Inner ellipse points
+                float ix1 = cx + cosf(angle1) * inner_rx;
+                float iy1 = cy + sinf(angle1) * inner_ry;
+                float ix2 = cx + cosf(angle2) * inner_rx;
+                float iy2 = cy + sinf(angle2) * inner_ry;
+                
+                // Draw ring segment as two triangles (quad)
+                sgp_draw_filled_triangle(ox1, oy1, ox2, oy2, ix1, iy1);
+                sgp_draw_filled_triangle(ox2, oy2, ix2, iy2, ix1, iy1);
+            }
         }
     }
     

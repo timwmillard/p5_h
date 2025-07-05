@@ -61,6 +61,21 @@ void draw() {
     point(50, 270);
     point(80, 270);
     point(110, 270);
+    
+    // Test very thick ellipse strokes
+    stroke(255, 0, 255);  // Magenta
+    fill(255, 255, 255);  // White fill
+    strokeWeight(20);
+    ellipse(350, 200, 80, 60);
+    
+    strokeWeight(25);
+    circle(450, 200, 70);
+    
+    // Test thick rectangle and triangle for comparison
+    stroke(0, 255, 255);  // Cyan
+    strokeWeight(15);
+    rect(250, 270, 80, 60);
+    triangle(380, 270, 430, 270, 405, 320);
 }
 
 P5_MAIN(800, 600, "Stroke Weight Test");
