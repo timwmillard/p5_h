@@ -440,6 +440,85 @@ static void p5__sokol_event(const sapp_event* ev) {
 // INTERNAL HELPER FUNCTIONS
 //
 
+// Helper function to draw connected thick lines with proper corner joining
+static void p5__draw_thick_polygon_outline(float* points, int num_points, float thickness, bool closed) {
+    if (num_points < 2 || thickness <= 1.0f) {
+        // Fall back to thin lines for simple cases
+        for (int i = 0; i < num_points - 1; i++) {
+            sgp_draw_line(points[i*2], points[i*2+1], points[(i+1)*2], points[(i+1)*2+1]);
+        }
+        if (closed && num_points > 2) {
+            sgp_draw_line(points[(num_points-1)*2], points[(num_points-1)*2+1], points[0], points[1]);
+        }
+        return;
+    }
+    
+    int line_count = closed ? num_points : num_points - 1;
+    
+    // Draw each line segment
+    for (int i = 0; i < line_count; i++) {
+        int next = (i + 1) % num_points;
+        float x1 = points[i*2], y1 = points[i*2+1];
+        float x2 = points[next*2], y2 = points[next*2+1];
+        
+        // Calculate line direction and normal
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float length = sqrtf(dx * dx + dy * dy);
+        
+        if (length < 0.001f) continue; // Skip zero-length lines
+        
+        // Normalize direction vector
+        dx /= length;
+        dy /= length;
+        
+        // Calculate perpendicular vector (normal)
+        float nx = -dy * thickness * 0.5f;
+        float ny = dx * thickness * 0.5f;
+        
+        // Calculate the four corners of the thick line rectangle
+        float x1a = x1 + nx, y1a = y1 + ny;
+        float x1b = x1 - nx, y1b = y1 - ny;
+        float x2a = x2 + nx, y2a = y2 + ny;
+        float x2b = x2 - nx, y2b = y2 - ny;
+        
+        // Draw as two triangles to form a rectangle
+        sgp_draw_filled_triangle(x1a, y1a, x1b, y1b, x2a, y2a);
+        sgp_draw_filled_triangle(x1b, y1b, x2b, y2b, x2a, y2a);
+    }
+    
+    // Draw corner caps to fill gaps
+    for (int i = 0; i < line_count; i++) {
+        int prev = (i - 1 + num_points) % num_points;
+        int curr = i;
+        int next = (i + 1) % num_points;
+        
+        // Skip if not a real corner (for open paths at endpoints)
+        if (!closed && (i == 0 || i == num_points - 1)) continue;
+        
+        float px = points[prev*2], py = points[prev*2+1];
+        float cx = points[curr*2], cy = points[curr*2+1];
+        float nx = points[next*2], ny = points[next*2+1];
+        
+        // Calculate vectors from corner to adjacent points
+        float v1x = px - cx, v1y = py - cy;
+        float v2x = nx - cx, v2y = ny - cy;
+        
+        float len1 = sqrtf(v1x*v1x + v1y*v1y);
+        float len2 = sqrtf(v2x*v2x + v2y*v2y);
+        
+        if (len1 < 0.001f || len2 < 0.001f) continue;
+        
+        // Normalize vectors
+        v1x /= len1; v1y /= len1;
+        v2x /= len2; v2y /= len2;
+        
+        // Draw a small filled circle at the corner to cover gaps
+        float radius = thickness * 0.5f;
+        sgp_draw_filled_rect(cx - radius, cy - radius, thickness, thickness);
+    }
+}
+
 // Helper function to draw a thick line using filled rectangles
 static void p5__draw_thick_line(float x1, float y1, float x2, float y2, float thickness) {
     if (thickness <= 1.0f) {
@@ -837,11 +916,14 @@ void p5_rect(float x, float y, float w, float h) {
     if (p5_state.stroke_enabled) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
-        // Draw rectangle outline using thick lines
-        p5__draw_thick_line(x, y, x + w, y, p5_state.stroke_width);         // top
-        p5__draw_thick_line(x + w, y, x + w, y + h, p5_state.stroke_width); // right
-        p5__draw_thick_line(x + w, y + h, x, y + h, p5_state.stroke_width); // bottom
-        p5__draw_thick_line(x, y + h, x, y, p5_state.stroke_width);         // left
+        // Draw rectangle outline using connected polygon outline
+        float rect_points[] = {
+            x, y,           // top-left
+            x + w, y,       // top-right
+            x + w, y + h,   // bottom-right
+            x, y + h        // bottom-left
+        };
+        p5__draw_thick_polygon_outline(rect_points, 4, p5_state.stroke_width, true);
     }
     
     p5__restore_transform();
@@ -916,9 +998,13 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
     if (p5_state.stroke_enabled) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
-        p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
-        p5__draw_thick_line(x2, y2, x3, y3, p5_state.stroke_width);
-        p5__draw_thick_line(x3, y3, x1, y1, p5_state.stroke_width);
+        // Draw triangle outline using connected polygon outline
+        float triangle_points[] = {
+            x1, y1,
+            x2, y2,
+            x3, y3
+        };
+        p5__draw_thick_polygon_outline(triangle_points, 3, p5_state.stroke_width, true);
     }
     
     p5__restore_transform();
@@ -943,10 +1029,14 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
     if (p5_state.stroke_enabled) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
-        p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
-        p5__draw_thick_line(x2, y2, x3, y3, p5_state.stroke_width);
-        p5__draw_thick_line(x3, y3, x4, y4, p5_state.stroke_width);
-        p5__draw_thick_line(x4, y4, x1, y1, p5_state.stroke_width);
+        // Draw quad outline using connected polygon outline
+        float quad_points[] = {
+            x1, y1,
+            x2, y2,
+            x3, y3,
+            x4, y4
+        };
+        p5__draw_thick_polygon_outline(quad_points, 4, p5_state.stroke_width, true);
     }
     
     p5__restore_transform();
