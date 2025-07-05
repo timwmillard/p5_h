@@ -80,6 +80,9 @@ run_p5js_final: p5js_final
 run_p5js_seamless: p5js_seamless
 	@./p5js_seamless
 
+run_shape_primitives: examples/shape_primitives
+	@./examples/shape_primitives
+
 run_color: examples/color
 	@./examples/color
 

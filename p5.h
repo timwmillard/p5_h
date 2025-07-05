@@ -133,38 +133,6 @@ typedef enum {
     P5_PIE
 } p5_arc_mode_t;
 
-// Transform state (internal)
-typedef struct {
-    float tx, ty;     // translation
-    float rot;        // rotation
-    float sx, sy;     // scale
-} p5_transform_t;
-
-// Canvas state (internal)
-typedef struct {
-    int width, height;    // Canvas dimensions
-    int x, y;            // Canvas position within window
-    bool created;        // Whether canvas has been created
-} p5_canvas_t;
-
-// Drawing state (internal)
-typedef struct {
-    p5_color_t fill_color;
-    p5_color_t stroke_color;
-    bool fill_enabled;
-    bool stroke_enabled;
-    float stroke_width;
-    p5_transform_t transform;
-    p5_transform_t transform_stack[32];
-    int transform_stack_depth;
-    p5_canvas_t canvas;
-    bool setup_has_drawn;  // Internal flag for p5.js compatibility  
-    bool in_setup_mode;    // Currently executing setup() - for p5.js compatibility
-    p5_angle_mode_t angle_mode;
-    p5_color_mode_t color_mode;
-    float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
-} p5_state_t;
-
 //
 // INITIALIZATION
 //
@@ -357,7 +325,38 @@ static inline void arcWithMode(float x, float y, float w, float h, float start, 
 
 #ifdef P5_IMPLEMENTATION
 
-// sokol_gp.h should already be included before this header
+// Transform state (internal)
+typedef struct {
+    float tx, ty;     // translation
+    float rot;        // rotation
+    float sx, sy;     // scale
+} p5_transform_t;
+
+// Canvas state (internal)
+typedef struct {
+    int width, height;    // Canvas dimensions
+    int x, y;            // Canvas position within window
+    bool created;        // Whether canvas has been created
+} p5_canvas_t;
+
+// Drawing state (internal)
+typedef struct {
+    p5_color_t fill_color;
+    p5_color_t stroke_color;
+    bool fill_enabled;
+    bool stroke_enabled;
+    float stroke_width;
+    p5_transform_t transform;
+    p5_transform_t transform_stack[32];
+    int transform_stack_depth;
+    p5_canvas_t canvas;
+    bool setup_has_drawn;  // Internal flag for p5.js compatibility  
+    bool in_setup_mode;    // Currently executing setup() - for p5.js compatibility
+    p5_angle_mode_t angle_mode;
+    p5_color_mode_t color_mode;
+    float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
+} p5_state_t;
+
 
 //
 // GLOBAL STATE
@@ -369,22 +368,10 @@ p5_state_t p5_state;
 // INTERNAL FUNCTIONS (p5__ prefix)
 //
 
-#ifndef P5_NO_APP
-// Sokol callback wrapper functions (only available when app mode is enabled)
-static void p5__sokol_init(void);
-static void p5__sokol_frame(void);
-static void p5__sokol_cleanup(void);
-static void p5__sokol_event(const sapp_event* ev);
-#endif
-
-// Internal helper functions
-static void p5__apply_transform(void);
-static void p5__restore_transform(void);
-
-#ifndef P5_NO_APP
 //
 // SOKOL WRAPPER FUNCTIONS (only compiled when app mode is enabled)
 //
+#ifndef P5_NO_APP
 
 static void p5__sokol_init(void) {
     sg_setup(&(sg_desc){
