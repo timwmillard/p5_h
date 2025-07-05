@@ -440,6 +440,45 @@ static void p5__sokol_event(const sapp_event* ev) {
 // INTERNAL HELPER FUNCTIONS
 //
 
+// Helper function to draw a thick line using filled rectangles
+static void p5__draw_thick_line(float x1, float y1, float x2, float y2, float thickness) {
+    if (thickness <= 1.0f) {
+        // Use thin line for thickness <= 1
+        sgp_draw_line(x1, y1, x2, y2);
+        return;
+    }
+    
+    // Calculate line direction and normal
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    float length = sqrtf(dx * dx + dy * dy);
+    
+    if (length < 0.001f) {
+        // Zero-length line, draw as a point (small circle)
+        float radius = thickness * 0.5f;
+        sgp_draw_filled_rect(x1 - radius, y1 - radius, thickness, thickness);
+        return;
+    }
+    
+    // Normalize direction vector
+    dx /= length;
+    dy /= length;
+    
+    // Calculate perpendicular vector (normal)
+    float nx = -dy * thickness * 0.5f;
+    float ny = dx * thickness * 0.5f;
+    
+    // Calculate the four corners of the thick line rectangle
+    float x1a = x1 + nx, y1a = y1 + ny;
+    float x1b = x1 - nx, y1b = y1 - ny;
+    float x2a = x2 + nx, y2a = y2 + ny;
+    float x2b = x2 - nx, y2b = y2 - ny;
+    
+    // Draw as two triangles to form a rectangle
+    sgp_draw_filled_triangle(x1a, y1a, x1b, y1b, x2a, y2a);
+    sgp_draw_filled_triangle(x1b, y1b, x2b, y2b, x2a, y2a);
+}
+
 // Helper function to apply current transform
 static void p5__apply_transform(void) {
     if (p5_state.transform.tx != 0.0f || p5_state.transform.ty != 0.0f ||
@@ -761,7 +800,16 @@ void p5_point(float x, float y) {
     p5__apply_transform();
     sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                   p5_state.stroke_color.b, p5_state.stroke_color.a);
-    sgp_draw_point(x, y);
+    
+    if (p5_state.stroke_width <= 1.0f) {
+        // Use built-in point for thin points
+        sgp_draw_point(x, y);
+    } else {
+        // Draw thick point as filled circle
+        float radius = p5_state.stroke_width * 0.5f;
+        sgp_draw_filled_rect(x - radius, y - radius, p5_state.stroke_width, p5_state.stroke_width);
+    }
+    
     p5__restore_transform();
 }
 
@@ -771,7 +819,7 @@ void p5_line(float x1, float y1, float x2, float y2) {
     p5__apply_transform();
     sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                   p5_state.stroke_color.b, p5_state.stroke_color.a);
-    sgp_draw_line(x1, y1, x2, y2);
+    p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
     p5__restore_transform();
 }
 
@@ -789,11 +837,11 @@ void p5_rect(float x, float y, float w, float h) {
     if (p5_state.stroke_enabled) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
-        // Draw rectangle outline using lines
-        sgp_draw_line(x, y, x + w, y);         // top
-        sgp_draw_line(x + w, y, x + w, y + h); // right
-        sgp_draw_line(x + w, y + h, x, y + h); // bottom
-        sgp_draw_line(x, y + h, x, y);         // left
+        // Draw rectangle outline using thick lines
+        p5__draw_thick_line(x, y, x + w, y, p5_state.stroke_width);         // top
+        p5__draw_thick_line(x + w, y, x + w, y + h, p5_state.stroke_width); // right
+        p5__draw_thick_line(x + w, y + h, x, y + h, p5_state.stroke_width); // bottom
+        p5__draw_thick_line(x, y + h, x, y, p5_state.stroke_width);         // left
     }
     
     p5__restore_transform();
@@ -837,7 +885,7 @@ void p5_ellipse(float x, float y, float w, float h) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         
-        // Draw ellipse outline using line segments
+        // Draw ellipse outline using thick line segments
         for (int i = 0; i < segments; i++) {
             float angle1 = (float)i / segments * TWO_PI;
             float angle2 = (float)(i + 1) / segments * TWO_PI;
@@ -847,7 +895,7 @@ void p5_ellipse(float x, float y, float w, float h) {
             float x2 = cx + cosf(angle2) * rx;
             float y2 = cy + sinf(angle2) * ry;
             
-            sgp_draw_line(x1, y1, x2, y2);
+            p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
         }
     }
     
@@ -868,9 +916,9 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
     if (p5_state.stroke_enabled) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
-        sgp_draw_line(x1, y1, x2, y2);
-        sgp_draw_line(x2, y2, x3, y3);
-        sgp_draw_line(x3, y3, x1, y1);
+        p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
+        p5__draw_thick_line(x2, y2, x3, y3, p5_state.stroke_width);
+        p5__draw_thick_line(x3, y3, x1, y1, p5_state.stroke_width);
     }
     
     p5__restore_transform();
@@ -895,10 +943,10 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
     if (p5_state.stroke_enabled) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
-        sgp_draw_line(x1, y1, x2, y2);
-        sgp_draw_line(x2, y2, x3, y3);
-        sgp_draw_line(x3, y3, x4, y4);
-        sgp_draw_line(x4, y4, x1, y1);
+        p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
+        p5__draw_thick_line(x2, y2, x3, y3, p5_state.stroke_width);
+        p5__draw_thick_line(x3, y3, x4, y4, p5_state.stroke_width);
+        p5__draw_thick_line(x4, y4, x1, y1, p5_state.stroke_width);
     }
     
     p5__restore_transform();
@@ -952,7 +1000,7 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         
-        // Draw arc outline using line segments
+        // Draw arc outline using thick line segments
         for (int i = 0; i < segments; i++) {
             float t1 = (float)i / segments;
             float t2 = (float)(i + 1) / segments;
@@ -964,7 +1012,7 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
             float x2 = cx + cosf(angle2) * rx;
             float y2 = cy + sinf(angle2) * ry;
             
-            sgp_draw_line(x1, y1, x2, y2);
+            p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
         }
         
         // Draw closing lines based on arc mode
@@ -974,12 +1022,12 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
         float stop_y = cy + sinf(stop_rad) * ry;
         
         if (mode == P5_CHORD) {
-            // Connect arc endpoints with straight line
-            sgp_draw_line(start_x, start_y, stop_x, stop_y);
+            // Connect arc endpoints with straight thick line
+            p5__draw_thick_line(start_x, start_y, stop_x, stop_y, p5_state.stroke_width);
         } else if (mode == P5_PIE) {
-            // Connect arc endpoints to center
-            sgp_draw_line(cx, cy, start_x, start_y);
-            sgp_draw_line(cx, cy, stop_x, stop_y);
+            // Connect arc endpoints to center with thick lines
+            p5__draw_thick_line(cx, cy, start_x, start_y, p5_state.stroke_width);
+            p5__draw_thick_line(cx, cy, stop_x, stop_y, p5_state.stroke_width);
         }
         // P5_OPEN mode draws no closing lines
     }
