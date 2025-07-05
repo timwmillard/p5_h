@@ -238,7 +238,7 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
 
 // Named color constants
 
-#define COLOR p5_parse_color_string
+#define COLOR p5_color_string
 
 // Type aliases
 typedef p5_color_t Color;
@@ -714,18 +714,12 @@ static p5_color_t p5__parse_named_color(const char* name) {
 }
 
 // Public color parsing function
-p5_color_t p5_parse_color_string(const char* color_str) {
+p5_color_t p5_color_string(const char* color_str) {
     if (color_str[0] == '#') {
         return p5__parse_hex_color(color_str);
     } else {
         return p5__parse_named_color(color_str);
     }
-}
-
-// Named color background function
-void p5_background_named(const char* color_name) {
-    p5_color_t color = p5_parse_color_string(color_name);
-    p5_background_color(color);
 }
 
 // Transform functions
