@@ -12,6 +12,7 @@
 #include "../p5.h"
 
 void setup() {
+    printf("setup called\n");
 }
 
 void draw() {
