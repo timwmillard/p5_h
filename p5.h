@@ -150,30 +150,29 @@ int p5_width(void);
 int p5_height(void);
 int p5_window_width(void);
 int p5_window_height(void);
-void p5_background(unsigned int r, unsigned int g, unsigned int b);
-void p5_background_color(p5_color_t color);
+void p5_background(p5_color_t color);
+void p5_background_rgb(unsigned int r, unsigned int g, unsigned int b);
 
 //
 // COLOR FUNCTIONS
 //
 
-p5_color_t p5_color(unsigned int r, unsigned int g, unsigned int b);
-p5_color_t p5_color_alpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
-void p5_fill(unsigned int r, unsigned int g, unsigned int b);
-void p5_fill_color(p5_color_t color);
-void p5_fill_alpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
-void p5_stroke(unsigned int r, unsigned int g, unsigned int b);
-void p5_stroke_color(p5_color_t color);
-void p5_stroke_alpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
+p5_color_t p5_color(const char* color);
+p5_color_t p5_color_rgb(unsigned int r, unsigned int g, unsigned int b);
+p5_color_t p5_color_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
+void p5_fill(p5_color_t color);
+void p5_fill_rgb(unsigned int r, unsigned int g, unsigned int b);
+void p5_fill_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
+void p5_stroke(p5_color_t color);
+void p5_stroke_rgb(unsigned int r, unsigned int g, unsigned int b);
+void p5_stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
 void p5_stroke_weight(float weight);
-void p5_background_named(const char* color_name);
 void p5_no_fill(void);
 void p5_no_stroke(void);
 void p5_angle_mode(p5_angle_mode_t mode);
 void p5_color_mode(p5_color_mode_t mode);
 void p5_color_mode_range(p5_color_mode_t mode, float max1, float max2, float max3, float maxA);
 void p5_text_output(void);
-p5_color_t p5_parse_color_string(const char* color_str);
 
 //
 // TRANSFORM FUNCTIONS
@@ -200,7 +199,6 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
 void p5_arc(float x, float y, float w, float h, float start, float stop);
 void p5_arc_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode);
-void p5_arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode);
 
 //
 // MATH CONSTANTS
@@ -238,7 +236,7 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
 
 // Named color constants
 
-#define COLOR p5_color_string
+#define COLOR p5_color
 
 // Type aliases
 typedef p5_color_t Color;
@@ -250,18 +248,18 @@ static inline int width(void) { return p5_width(); }
 static inline int height(void) { return p5_height(); }
 static inline int windowWidth(void) { return p5_window_width(); }
 static inline int windowHeight(void) { return p5_window_height(); }
-static inline void background(unsigned int r, unsigned int g, unsigned int b) { p5_background(r, g, b); }
-static inline void backgroundColor(Color color) { p5_background_color(color); }
+static inline void background(Color color) { p5_background(color); }
+static inline void background_rgb(unsigned int r, unsigned int g, unsigned int b) { p5_background_rgb(r, g, b); }
 
 // Color functions
-static inline Color color(unsigned int r, unsigned int g, unsigned int b) { return p5_color(r, g, b); }
-static inline Color colorAlpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { return p5_color_alpha(r, g, b, a); }
-static inline void fill(unsigned int r, unsigned int g, unsigned int b) { p5_fill(r, g, b); }
-static inline void fillColor(Color color) { p5_fill_color(color); }
-static inline void fillAlpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { p5_fill_alpha(r, g, b, a); }
-static inline void stroke(unsigned int r, unsigned int g, unsigned int b) { p5_stroke(r, g, b); }
-static inline void strokeColor(Color color) { p5_stroke_color(color); }
-static inline void strokeAlpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { p5_stroke_alpha(r, g, b, a); }
+static inline Color color_rgb(unsigned int r, unsigned int g, unsigned int b) { return p5_color_rgb(r, g, b); }
+static inline Color color_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { return p5_color_rgba(r, g, b, a); }
+static inline void fill(Color color) { p5_fill(color); }
+static inline void fill_rgb(unsigned int r, unsigned int g, unsigned int b) { p5_fill_rgb(r, g, b); }
+static inline void fill_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { p5_fill_rgba(r, g, b, a); }
+static inline void stroke(Color color) { p5_stroke(color); }
+static inline void stroke_rgb(unsigned int r, unsigned int g, unsigned int b) { p5_stroke_rgb(r, g, b); }
+static inline void stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { p5_stroke_rgba(r, g, b, a); }
 static inline void strokeWeight(float weight) { p5_stroke_weight(weight); }
 static inline void noFill(void) { p5_no_fill(); }
 static inline void noStroke(void) { p5_no_stroke(); }
@@ -289,7 +287,7 @@ static inline void quad(float x1, float y1, float x2, float y2, float x3, float 
 // Note: In p5.js, arc() with 7 parameters includes mode, but C doesn't support function overloading
 // Use arc() for default CHORD mode, or arcWithMode() for specific modes
 static inline void arc(float x, float y, float w, float h, float start, float stop) { p5_arc(x, y, w, h, start, stop); }
-static inline void arcWithMode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) { p5_arc_with_mode(x, y, w, h, start, stop, mode); }
+static inline void arcMode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) { p5_arc_mode(x, y, w, h, start, stop, mode); }
 
 #endif // P5_NO_SHORT_NAMES
 
@@ -661,51 +659,53 @@ int p5_window_height(void) {
     return sapp_height();
 }
 
-void p5_background(unsigned int r, unsigned int g, unsigned int b) {
-    sgp_set_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
-    sgp_clear();
-}
-
-void p5_background_color(p5_color_t color) {
+void p5_background(p5_color_t color) {
     sgp_set_color(color.r, color.g, color.b, color.a);
     sgp_clear();
 }
 
+void p5_background_rgb(unsigned int r, unsigned int g, unsigned int b) {
+    sgp_set_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
+    sgp_clear();
+}
+
 // Color functions
-p5_color_t p5_color(unsigned int r, unsigned int g, unsigned int b) {
+p5_color_t p5_color_rgb(unsigned int r, unsigned int g, unsigned int b) {
     return (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
 }
 
-p5_color_t p5_color_alpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
+p5_color_t p5_color_rbga(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
     return (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
 }
 
-void p5_fill(unsigned int r, unsigned int g, unsigned int b) {
-    p5_state.fill_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
-    p5_state.fill_enabled = true;
-}
-
-void p5_fill_color(p5_color_t color) {
+void p5_fill(p5_color_t color) {
     p5_state.fill_color = color;
     p5_state.fill_enabled = true;
 }
 
-void p5_fill_alpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
+void p5_fill_rgb(unsigned int r, unsigned int g, unsigned int b) {
+    p5_state.fill_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
+    p5_state.fill_enabled = true;
+}
+
+
+void p5_fill_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
     p5_state.fill_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
     p5_state.fill_enabled = true;
 }
 
-void p5_stroke(unsigned int r, unsigned int g, unsigned int b) {
-    p5_state.stroke_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
-    p5_state.stroke_enabled = true;
-}
-
-void p5_stroke_color(p5_color_t color) {
+void p5_stroke(p5_color_t color) {
     p5_state.stroke_color = color;
     p5_state.stroke_enabled = true;
 }
 
-void p5_stroke_alpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
+void p5_stroke_rgb(unsigned int r, unsigned int g, unsigned int b) {
+    p5_state.stroke_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
+    p5_state.stroke_enabled = true;
+}
+
+
+void p5_stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
     p5_state.stroke_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
     p5_state.stroke_enabled = true;
 }
@@ -840,7 +840,7 @@ static p5_color_t p5__parse_named_color(const char* name) {
 }
 
 // Public color parsing function
-p5_color_t p5_color_string(const char* color_str) {
+p5_color_t p5_color(const char* color_str) {
     if (color_str[0] == '#') {
         return p5__parse_hex_color(color_str);
     } else {
@@ -1090,14 +1090,10 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
 }
 
 void p5_arc(float x, float y, float w, float h, float start, float stop) {
-    p5_arc_with_mode(x, y, w, h, start, stop, P5_CHORD);
+    p5_arc_mode(x, y, w, h, start, stop, P5_CHORD);
 }
 
 void p5_arc_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) {
-    p5_arc_with_mode(x, y, w, h, start, stop, mode);
-}
-
-void p5_arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) {
     p5__apply_transform();
     
     const int segments = 32;

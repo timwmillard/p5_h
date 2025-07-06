@@ -20,7 +20,7 @@ void setup() {
 
 void draw() {
   // background(255, 255, 255);
-  backgroundColor(COLOR("#ffffff"));
+  background(COLOR("#ffffff"));
 
   x = x + xspeed;
   y = y + yspeed;
@@ -32,8 +32,8 @@ void draw() {
     yspeed = yspeed * -1;
   }
 
-  stroke(0, 0 ,0);
-  fill(127, 127, 127);
+  stroke_rgb(0, 0 ,0);
+  fill_rgb(127, 127, 127);
   circle(x, y, 48);
 
 }

@@ -27,14 +27,14 @@ void frame() {
     sgp_project(0.0f, (float)sapp_width(), 0.0f, (float)sapp_height());
     
     // p5.js style drawing
-    p5_background(0.1f, 0.1f, 0.2f);
+    p5_background_rgb(0.1f *255, 0.1f*255, 0.2f*255);
     
     // animated rotating rectangle
     p5_push();
     p5_translate(320.0f, 240.0f);
     p5_rotate(state.time);
-    p5_fill(1.0f, 0.5f, 0.2f);
-    p5_stroke(1.0f, 1.0f, 1.0f);
+    p5_fill_rgb(1.0f, 0.5f, 0.2f);
+    p5_stroke_rgb(1.0f, 1.0f, 1.0f);
     p5_rect(-50.0f, -30.0f, 100.0f, 60.0f);
     p5_pop();
     
@@ -46,7 +46,7 @@ void frame() {
         float g = 0.5f + 0.5f * sinf(state.time + i);
         float b = 0.8f;
         
-        p5_fill(r, g, b);
+        p5_fill_rgb(r, g, b);
         p5_no_stroke();
         p5_circle(x, y, 50.0f);
     }
@@ -55,13 +55,13 @@ void frame() {
     p5_push();
     p5_translate(320.0f, 350.0f);
     p5_scale(1.5f + 0.5f * sinf(state.time * 2.0f));
-    p5_fill(0.2f, 1.0f, 0.5f);
-    p5_stroke(0.0f, 0.0f, 0.0f);
+    p5_fill_rgb(0.2f, 1.0f, 0.5f);
+    p5_stroke_rgb(0.0f, 0.0f, 0.0f);
     p5_triangle(-40.0f, 20.0f, 40.0f, 20.0f, 0.0f, -30.0f);
     p5_pop();
     
     // lines pattern
-    p5_stroke(0.7f, 0.3f, 0.9f);
+    p5_stroke_rgb(0.7f, 0.3f, 0.9f);
     for (int i = 0; i < 10; i++) {
         float offset = sinf(state.time + i * 0.5f) * 20.0f;
         p5_line(500.0f + i * 10.0f, 150.0f + offset, 

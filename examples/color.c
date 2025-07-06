@@ -18,7 +18,7 @@ void setup() {
   // CSS color name
   // For a list of available color names, see:
   // https://www.w3.org/wiki/CSS/Properties/color/keywords
-  backgroundColor(COLOR("steelblue"));
+  background(COLOR("steelblue"));
 
   // Set width of stroke to 4 units
   strokeWeight(4);
@@ -27,14 +27,14 @@ void setup() {
   // Red, green, and blue values
   // On a scale of 0-255
   // Light blue
-  fill(200, 200, 255);
+  fill_rgb(200, 200, 255);
 
   // Dark blue
-  stroke(20, 20, 100);
+  stroke_rgb(20, 20, 100);
   square(20, 20, 100);
 
   // Dark red
-  stroke(100, 20, 20);
+  stroke_rgb(100, 20, 20);
 
   // The rectangle uses the last set fill color,
   // which is light blue, set before drawing the square
@@ -45,14 +45,14 @@ void setup() {
   colorMode(HSB);
 
   // Light green
-  fill(120, 70, 90);
+  fill_rgb(120, 70, 90);
 
   // Dark green
-  stroke(120, 60, 30);
+  stroke_rgb(120, 60, 30);
   ellipse(540, 100, 300, 100);
 
   // Dark fuchsia
-  fill(300, 90, 30);
+  fill_rgb(300, 90, 30);
 
   // Draw without lines
   noStroke();
@@ -66,11 +66,11 @@ void setup() {
   colorMode(HSL);
 
   // Light green
-  fill(120, 70, 90);
+  fill_rgb(120, 70, 90);
 
   // Dark green
-  stroke(120, 60, 30);
-  arcWithMode(540, 100, 300, 100, 180, 360, CHORD);
+  stroke_rgb(120, 60, 30);
+  arcMode(540, 100, 300, 100, 180, 360, CHORD);
 
   // Save current settings
   push();
@@ -79,7 +79,7 @@ void setup() {
   colorMode(RGB);
 
   // Navy blue
-  stroke(20, 10, 80);
+  stroke_rgb(20, 10, 80);
   line(20, 200, 200, 350);
 
   // Restore last saved settings
@@ -93,7 +93,7 @@ void setup() {
   // Hex string
   // This is a set of red, green, blue values
   // Encoded in base 16
-  strokeColor(COLOR("#EFD8D8"));
+  stroke(COLOR("#EFD8D8"));
 
   // Draw without inner color
   noFill();

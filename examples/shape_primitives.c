@@ -19,7 +19,7 @@ void setup() {
   angleMode(DEGREES);
 
   // Draw a light gray background
-  background(220, 220, 220);
+  background_rgb(220, 220, 220);
 
   // Draw square
   // x, y, size

@@ -107,11 +107,14 @@ clean:
 	rm -f compile_flags.txt
 	@echo "Clean complete"
 
-# Example targets
-src/demo: src/demo.c $(DEPS)
+# Demo targets
+src/%: src/%.c $(DEPS)
 
-demo: src/demo
-	@src/demo
+# Example targets
+examples/%: examples/%.c $(DEPS)
+
+%: src/%
+	@$<
 
 compile_flags.txt: FORCE
 	@echo "Generating compile_flags.txt for IDE support"
