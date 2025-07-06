@@ -9,13 +9,17 @@
 
 // p5 library with implementation
 #define P5_IMPLEMENTATION
-#include "../p5.h"
+#include "p5.h"
 
 void setup() {
-    printf("setup called\n");
+    // printf("setup called\n");
 }
 
 void draw() {
+    fill(COLOR("red"));
+    stroke(COLOR("blue"));
+    strokeWeight(10);
+    point(50, 50);
 }
 
 P5_MAIN(640, 480, "Handmade");

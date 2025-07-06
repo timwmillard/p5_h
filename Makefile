@@ -8,7 +8,7 @@ UNAME_M := $(shell uname -m)
 
 # Common compiler flags
 CFLAGS = -std=c99 -Wall -Wextra -O2
-INCLUDES = -Ideps
+INCLUDES =  -I. -Ideps
 
 # Platform-specific configuration
 ifeq ($(UNAME_S), Linux)
