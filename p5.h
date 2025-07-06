@@ -145,7 +145,7 @@ void p5_init(void);
 //
 
 void p5_create_canvas(int width, int height);
-void p5_create_canvas_positioned(int width, int height, int x, int y);
+void p5_create_canvas_xy(int width, int height, int x, int y);
 int p5_width(void);
 int p5_height(void);
 int p5_window_width(void);
@@ -243,7 +243,7 @@ typedef p5_color_t Color;
 
 // Canvas functions
 static inline void createCanvas(int width, int height) { p5_create_canvas(width, height); }
-static inline void createCanvasPositioned(int width, int height, int x, int y) { p5_create_canvas_positioned(width, height, x, y); }
+static inline void createCanvas_xy(int width, int height, int x, int y) { p5_create_canvas_xy(width, height, x, y); }
 static inline int width(void) { return p5_width(); }
 static inline int height(void) { return p5_height(); }
 static inline int windowWidth(void) { return p5_window_width(); }
@@ -585,19 +585,24 @@ static void p5__restore_transform(void) {
 //
 
 void p5_init(void) {
+    p5_state.setup_done = false;
+
     p5_state.fill_color = (p5_color_t){1.0f, 1.0f, 1.0f, 1.0f};
-    p5_state.stroke_color = (p5_color_t){0.0f, 0.0f, 0.0f, 1.0f};
     p5_state.fill_enabled = true;
+
+    p5_state.stroke_color = (p5_color_t){0.0f, 0.0f, 0.0f, 1.0f};
     p5_state.stroke_enabled = true;
     p5_state.stroke_width = 1.0f;
+
     p5_state.transform = (p5_transform_t){0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
     p5_state.transform_stack_depth = 0;
+
     p5_state.canvas.created = false;
     p5_state.canvas.width = 0;
     p5_state.canvas.height = 0;
     p5_state.canvas.x = 0;
     p5_state.canvas.y = 0;
-    p5_state.setup_done = false;
+
     p5_state.angle_mode = P5_RADIANS;  // Default to radians like p5.js
     p5_state.color_mode = P5_RGB;      // Default to RGB
     p5_state.color_maxes[0] = 255.0f;  // R max
@@ -609,21 +614,20 @@ void p5_init(void) {
 // Canvas functions
 void p5_create_canvas(int w, int h) {
     // Center the canvas in the window
-    int win_w = sapp_width();
-    int win_h = sapp_height();
-    int x = (win_w - w) / 2;
-    int y = (win_h - h) / 2;
-    p5_create_canvas_positioned(w, h, x, y);
+    int x = (sapp_width() - w) / 2;
+    int y = (sapp_height() - h) / 2;
+    p5_create_canvas_xy(w, h, x, y);
 }
 
-void p5_create_canvas_positioned(int w, int h, int x, int y) {
+void p5_create_canvas_xy(int w, int h, int x, int y) {
     // P5.js compatibility: only create canvas once (idempotent)
     if (p5_state.canvas.created) return;
     
     // Validate canvas fits within window
     if (w <= 0 || h <= 0) return;
     if (x < 0 || y < 0) return;
-    if (x + w > sapp_width() || y + h > sapp_height()) return;
+    if (x + w > sapp_width()) w = sapp_width();
+    if (y + h > sapp_height()) h = sapp_height();
     
     p5_state.canvas.width = w;
     p5_state.canvas.height = h;

@@ -13,9 +13,11 @@
 
 void setup() {
     // printf("setup called\n");
+    createCanvas(640, 480);
 }
 
 void draw() {
+    background(COLOR("green"));
     fill(COLOR("red"));
     stroke(COLOR("blue"));
     strokeWeight(10);
