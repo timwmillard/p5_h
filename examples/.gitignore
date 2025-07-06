@@ -1,3 +1,9 @@
-/color
-/shape_primitives
-/point
+
+*
+
+!*/
+
+!*.c
+
+!.gitignore
+
