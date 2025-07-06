@@ -338,15 +338,20 @@ typedef struct {
 
 // Drawing state (internal)
 typedef struct {
+    // Functions
     bool setup_done;
     void (*setup)(void);
     void (*frame)(void);
 
+    // Fill
+    bool do_fill;
     p5_color_t fill_color;
+
+    // Stroke
+    bool do_stroke;
     p5_color_t stroke_color;
-    bool fill_enabled;
-    bool stroke_enabled;
     float stroke_weight;
+
     p5_transform_t transform;
     p5_transform_t transform_stack[32];
     int transform_stack_depth;
@@ -588,10 +593,10 @@ void p5_init(void) {
     p5_state.setup_done = false;
 
     p5_state.fill_color = (p5_color_t){1.0f, 1.0f, 1.0f, 1.0f};
-    p5_state.fill_enabled = true;
+    p5_state.do_fill = true;
 
     p5_state.stroke_color = (p5_color_t){0.0f, 0.0f, 0.0f, 1.0f};
-    p5_state.stroke_enabled = true;
+    p5_state.do_stroke = true;
     p5_state.stroke_weight = 1.0f;
 
     p5_state.transform = (p5_transform_t){0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
@@ -673,34 +678,34 @@ p5_color_t p5_color_rbga(unsigned int r, unsigned int g, unsigned int b, unsigne
 
 void p5_fill(p5_color_t color) {
     p5_state.fill_color = color;
-    p5_state.fill_enabled = true;
+    p5_state.do_fill = true;
 }
 
 void p5_fill_rgb(unsigned int r, unsigned int g, unsigned int b) {
     p5_state.fill_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
-    p5_state.fill_enabled = true;
+    p5_state.do_fill = true;
 }
 
 
 void p5_fill_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
     p5_state.fill_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
-    p5_state.fill_enabled = true;
+    p5_state.do_fill = true;
 }
 
 void p5_stroke(p5_color_t color) {
     p5_state.stroke_color = color;
-    p5_state.stroke_enabled = true;
+    p5_state.do_stroke = true;
 }
 
 void p5_stroke_rgb(unsigned int r, unsigned int g, unsigned int b) {
     p5_state.stroke_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
-    p5_state.stroke_enabled = true;
+    p5_state.do_stroke = true;
 }
 
 
 void p5_stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
     p5_state.stroke_color = (p5_color_t){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
-    p5_state.stroke_enabled = true;
+    p5_state.do_stroke = true;
 }
 
 void p5_stroke_weight(float weight) {
@@ -708,11 +713,11 @@ void p5_stroke_weight(float weight) {
 }
 
 void p5_no_fill(void) {
-    p5_state.fill_enabled = false;
+    p5_state.do_fill = false;
 }
 
 void p5_no_stroke(void) {
-    p5_state.stroke_enabled = false;
+    p5_state.do_stroke = false;
 }
 
 // Angle mode functions
@@ -894,7 +899,7 @@ void p5_point(float x, float y) {
 }
 
 void p5_line(float x1, float y1, float x2, float y2) {
-    if (!p5_state.stroke_enabled) return;
+    if (!p5_state.do_stroke) return;
     
     p5__apply_transform();
     sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
@@ -908,14 +913,14 @@ void p5_rect(float x, float y, float w, float h) {
     // sgp_push_transform();
     
     // Fill
-    if (p5_state.fill_enabled) {
+    if (p5_state.do_fill) {
         sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
                       p5_state.fill_color.b, p5_state.fill_color.a);
         sgp_draw_filled_rect(x, y, w, h);
     }
     
     // Stroke
-    if (p5_state.stroke_enabled) {
+    if (p5_state.do_stroke) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         float weight = p5_state.stroke_weight;
@@ -949,14 +954,14 @@ void p5_ellipse(float x, float y, float w, float h) {
     // Dynamic segment count: more segments for larger ellipses and thicker strokes
     float circumference = PI * (3.0f * (rx + ry) - sqrtf((3.0f * rx + ry) * (rx + 3.0f * ry)));
     int base_segments = (int)(circumference / 8.0f); // Base: one segment per 8 pixels of circumference
-    if (p5_state.stroke_enabled && p5_state.stroke_weight > 4.0f) {
+    if (p5_state.do_stroke && p5_state.stroke_weight > 4.0f) {
         // Add extra segments for thick strokes to prevent gaps
         base_segments += (int)(p5_state.stroke_weight / 2.0f);
     }
     const int segments = fmaxf(16, fminf(128, base_segments)); // Clamp between 16-128 segments
     
     // Fill
-    if (p5_state.fill_enabled) {
+    if (p5_state.do_fill) {
         sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
                       p5_state.fill_color.b, p5_state.fill_color.a);
         
@@ -975,7 +980,7 @@ void p5_ellipse(float x, float y, float w, float h) {
     }
     
     // Stroke
-    if (p5_state.stroke_enabled) {
+    if (p5_state.do_stroke) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         
@@ -1031,14 +1036,14 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
     p5__apply_transform();
     
     // Fill
-    if (p5_state.fill_enabled) {
+    if (p5_state.do_fill) {
         sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
                       p5_state.fill_color.b, p5_state.fill_color.a);
         sgp_draw_filled_triangle(x1, y1, x2, y2, x3, y3);
     }
     
     // Stroke
-    if (p5_state.stroke_enabled) {
+    if (p5_state.do_stroke) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         // Draw triangle outline using connected polygon outline
@@ -1061,7 +1066,7 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
     p5__apply_transform();
     
     // Fill (using two triangles)
-    if (p5_state.fill_enabled) {
+    if (p5_state.do_fill) {
         sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
                       p5_state.fill_color.b, p5_state.fill_color.a);
         sgp_draw_filled_triangle(x1, y1, x2, y2, x3, y3);
@@ -1069,7 +1074,7 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
     }
     
     // Stroke
-    if (p5_state.stroke_enabled) {
+    if (p5_state.do_stroke) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         // Draw quad outline using connected polygon outline
@@ -1104,7 +1109,7 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
     float angle_range = stop_rad - start_rad;
     
     // Fill
-    if (p5_state.fill_enabled) {
+    if (p5_state.do_fill) {
         sgp_set_color(p5_state.fill_color.r, p5_state.fill_color.g, 
                       p5_state.fill_color.b, p5_state.fill_color.a);
         
@@ -1125,7 +1130,7 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
     }
     
     // Stroke
-    if (p5_state.stroke_enabled) {
+    if (p5_state.do_stroke) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         
