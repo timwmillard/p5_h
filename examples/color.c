@@ -70,7 +70,7 @@ void setup() {
 
   // Dark green
   stroke_rgb(120, 60, 30);
-  arcMode(540, 100, 300, 100, 180, 360, CHORD);
+  arc_with_mode(540, 100, 300, 100, 180, 360, CHORD);
 
   // Save current settings
   push();

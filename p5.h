@@ -198,7 +198,7 @@ void p5_ellipse(float x, float y, float w, float h);
 void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
 void p5_arc(float x, float y, float w, float h, float start, float stop);
-void p5_arc_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode);
+void p5_arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode);
 
 //
 // MATH CONSTANTS
@@ -273,7 +273,7 @@ static inline void pop(void) { p5_pop(); }
 static inline void translate(float x, float y) { p5_translate(x, y); }
 static inline void rotate(float angle) { p5_rotate(angle); }
 static inline void scale(float s) { p5_scale(s); }
-static inline void scaleXY(float sx, float sy) { p5_scale_xy(sx, sy); }
+static inline void scale_xy(float sx, float sy) { p5_scale_xy(sx, sy); }
 
 // Shape functions
 static inline void point(float x, float y) { p5_point(x, y); }
@@ -287,7 +287,7 @@ static inline void quad(float x1, float y1, float x2, float y2, float x3, float 
 // Note: In p5.js, arc() with 7 parameters includes mode, but C doesn't support function overloading
 // Use arc() for default CHORD mode, or arcWithMode() for specific modes
 static inline void arc(float x, float y, float w, float h, float start, float stop) { p5_arc(x, y, w, h, start, stop); }
-static inline void arcMode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) { p5_arc_mode(x, y, w, h, start, stop, mode); }
+static inline void arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) { p5_arc_with_mode(x, y, w, h, start, stop, mode); }
 
 #endif // P5_NO_SHORT_NAMES
 
@@ -1090,10 +1090,10 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
 }
 
 void p5_arc(float x, float y, float w, float h, float start, float stop) {
-    p5_arc_mode(x, y, w, h, start, stop, P5_CHORD);
+    p5_arc_with_mode(x, y, w, h, start, stop, P5_CHORD);
 }
 
-void p5_arc_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) {
+void p5_arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_arc_mode_t mode) {
     p5__apply_transform();
     
     const int segments = 32;
