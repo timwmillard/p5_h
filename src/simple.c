@@ -20,8 +20,8 @@ void draw() {
     background(COLOR("green"));
     fill(COLOR("red"));
     stroke(COLOR("blue"));
-    strokeWeight(5);
-    rotate(45);
+    strokeWeight(1);
+    // rotate(45);
     rect(50, 50, 100, 200);
 
     noStroke();

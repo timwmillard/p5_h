@@ -5,21 +5,22 @@
 </head>
 <body>
   <script>
-    function setup() {
-        createCanvas(500, 500);
-        console.log("Setup");
-        background('steelblue');
-        fill('red');
-        rect(100, 100, 50, 50);
-    }
+function setup() {
+    // printf("setup called\n");
+    createCanvas(640, 480);
+}
 
-    function draw() {
-        // background('purple');
-        fill('blue');
-        // stroke('yellow');
-        // strokeWeight(5);
-        rect(200, 200, 50, 50);
-    }
+function draw() {
+    background("green");
+    fill("red");
+    stroke("blue");
+    strokeWeight(1);
+    // rotate(45);
+    rect(50, 50, 100, 200);
+
+    noStroke();
+    square(300, 300, 80);
+}
   </script>
 </body>
 </html>
