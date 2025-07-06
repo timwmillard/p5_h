@@ -19,7 +19,7 @@ USAGE:
     }
 
     void draw() {
-        background(220, 220, 220);  // Light gray background
+        background_rgb(220, 220, 220);  // Light gray background
         rect(50, 50, 100, 75);      // Rectangle
         circle(width()/2, height()/2, 50);  // Centered circle
         // Use p5.js-style function names directly!
@@ -296,22 +296,21 @@ static inline void arc_with_mode(float x, float y, float w, float h, float start
 //
 
 #ifndef P5_NO_APP
-// Convenience macro to create sokol_main (use after defining setup() and draw())
+// P5_MAIN convenience macro to create sokol_main (use after defining setup() and draw())
 // Only available when P5_NO_APP is not defined
 #define P5_MAIN(window_w, window_h, title_str) \
     sapp_desc sokol_main(int argc, char* argv[]) { \
-        argc; \
-        argv; \
-        sapp_desc _p5_desc = {0}; \
-        _p5_desc.width = window_w; \
-        _p5_desc.height = window_h; \
-        _p5_desc.sample_count = 4; \
-        _p5_desc.init_cb = p5__sokol_init; \
-        _p5_desc.frame_cb = p5__sokol_frame; \
-        _p5_desc.cleanup_cb = p5__sokol_cleanup; \
-        _p5_desc.event_cb = p5__sokol_event; \
-        _p5_desc.window_title = title_str; \
-        return _p5_desc; \
+        (void)argc; (void)argv; \
+        return (sapp_desc){ \
+            .width = window_w, \
+            .height = window_h, \
+            .sample_count = 4, \
+            .init_cb = p5_sokol_init, \
+            .frame_cb = p5_sokol_frame, \
+            .cleanup_cb = p5_sokol_cleanup, \
+            .event_cb = p5_sokol_event, \
+            .window_title = title_str, \
+        }; \
     }
 #endif // P5_NO_APP
 
@@ -363,25 +362,21 @@ typedef struct {
 p5_state_t p5_state;
 
 //
-// INTERNAL FUNCTIONS (p5__ prefix)
-//
-
-//
 // SOKOL WRAPPER FUNCTIONS (only compiled when app mode is enabled)
 //
 #ifndef P5_NO_APP
 
-static void p5__sokol_init(void) {
+void p5_sokol_init(void) {
     sg_setup(&(sg_desc){
         .environment = sglue_environment(),
     });
     
-    sgp_setup(&(sgp_desc){0});  // Inherit MSAA from sokol_app
+    sgp_setup(&(sgp_desc){0});
     p5_init();
     // setup() will be called in first frame when graphics context is active
 }
 
-static void p5__sokol_frame(void) {
+void p5_sokol_frame(void) {
     sgp_begin(sapp_width(), sapp_height());
     
     // Set viewport to canvas area if canvas was created
@@ -420,12 +415,12 @@ static void p5__sokol_frame(void) {
     sg_commit();
 }
 
-static void p5__sokol_cleanup(void) {
+void p5_sokol_cleanup(void) {
     sgp_shutdown();
     sg_shutdown();
 }
 
-static void p5__sokol_event(const sapp_event* ev) {
+void p5_sokol_event(const sapp_event* ev) {
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) {
         if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
             sapp_quit();
@@ -433,9 +428,9 @@ static void p5__sokol_event(const sapp_event* ev) {
     }
 }
 #endif // P5_NO_APP
-
+       
 //
-// INTERNAL HELPER FUNCTIONS
+// INTERNAL FUNCTIONS (p5__ prefix)
 //
 
 // Helper function to draw connected thick lines with proper corner joining
