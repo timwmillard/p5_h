@@ -124,5 +124,6 @@ update-deps:
 	wget -O deps/sokol_app.h https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_app.h
 	wget -O deps/sokol_gfx.h https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_gfx.h
 	wget -O deps/sokol_glue.h https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_glue.h
+	wget -O deps/sokol_gp.h https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/deps/sokol_gp.h
 	wget -O deps/p5.h https://raw.githubusercontent.com/timwmillard/p5_h/refs/heads/master/p5.h
 
