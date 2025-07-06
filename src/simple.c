@@ -20,8 +20,12 @@ void draw() {
     background(COLOR("green"));
     fill(COLOR("red"));
     stroke(COLOR("blue"));
-    strokeWeight(10);
-    point(50, 50);
+    strokeWeight(5);
+    rotate(45);
+    rect(50, 50, 100, 200);
+
+    noStroke();
+    square(300, 300, 80);
 }
 
 P5_MAIN(640, 480, "Handmade");

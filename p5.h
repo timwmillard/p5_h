@@ -346,7 +346,7 @@ typedef struct {
     p5_color_t stroke_color;
     bool fill_enabled;
     bool stroke_enabled;
-    float stroke_width;
+    float stroke_weight;
     p5_transform_t transform;
     p5_transform_t transform_stack[32];
     int transform_stack_depth;
@@ -592,7 +592,7 @@ void p5_init(void) {
 
     p5_state.stroke_color = (p5_color_t){0.0f, 0.0f, 0.0f, 1.0f};
     p5_state.stroke_enabled = true;
-    p5_state.stroke_width = 1.0f;
+    p5_state.stroke_weight = 1.0f;
 
     p5_state.transform = (p5_transform_t){0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
     p5_state.transform_stack_depth = 0;
@@ -704,7 +704,7 @@ void p5_stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int
 }
 
 void p5_stroke_weight(float weight) {
-    p5_state.stroke_width = weight;
+    p5_state.stroke_weight = weight;
 }
 
 void p5_no_fill(void) {
@@ -881,13 +881,13 @@ void p5_point(float x, float y) {
     sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                   p5_state.stroke_color.b, p5_state.stroke_color.a);
     
-    if (p5_state.stroke_width <= 1.0f) {
+    if (p5_state.stroke_weight <= 1.0f) {
         // Use built-in point for thin points
         sgp_draw_point(x, y);
     } else {
         // Draw thick point as filled circle
-        float radius = p5_state.stroke_width * 0.5f;
-        sgp_draw_filled_rect(x - radius, y - radius, p5_state.stroke_width, p5_state.stroke_width);
+        float radius = p5_state.stroke_weight * 0.5f;
+        sgp_draw_filled_rect(x - radius, y - radius, p5_state.stroke_weight, p5_state.stroke_weight);
     }
     
     p5__restore_transform();
@@ -899,12 +899,12 @@ void p5_line(float x1, float y1, float x2, float y2) {
     p5__apply_transform();
     sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                   p5_state.stroke_color.b, p5_state.stroke_color.a);
-    p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
+    p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_weight);
     p5__restore_transform();
 }
 
 void p5_rect(float x, float y, float w, float h) {
-    p5__apply_transform();
+    sgp_push_transform();
     
     // Fill
     if (p5_state.fill_enabled) {
@@ -917,17 +917,18 @@ void p5_rect(float x, float y, float w, float h) {
     if (p5_state.stroke_enabled) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
-        // Draw rectangle outline using connected polygon outline
-        float rect_points[] = {
-            x, y,           // top-left
-            x + w, y,       // top-right
-            x + w, y + h,   // bottom-right
-            x, y + h        // bottom-left
+        float weight = p5_state.stroke_weight;
+        float hw = p5_state.stroke_weight/2;
+        sgp_rect rects[] = {
+            {x+hw,   y-hw,   w,      weight},
+            {x+w-hw, y+hw,   weight, h},
+            {x-hw,   y+h-hw, w,      weight},
+            {x-hw,   y-hw,   weight, h},
         };
-        p5__draw_thick_polygon_outline(rect_points, 4, p5_state.stroke_width, true);
+        sgp_draw_filled_rects(rects, 4);
     }
     
-    p5__restore_transform();
+    sgp_pop_transform();
 }
 
 void p5_circle(float x, float y, float diameter) {
@@ -946,9 +947,9 @@ void p5_ellipse(float x, float y, float w, float h) {
     // Dynamic segment count: more segments for larger ellipses and thicker strokes
     float circumference = PI * (3.0f * (rx + ry) - sqrtf((3.0f * rx + ry) * (rx + 3.0f * ry)));
     int base_segments = (int)(circumference / 8.0f); // Base: one segment per 8 pixels of circumference
-    if (p5_state.stroke_enabled && p5_state.stroke_width > 4.0f) {
+    if (p5_state.stroke_enabled && p5_state.stroke_weight > 4.0f) {
         // Add extra segments for thick strokes to prevent gaps
-        base_segments += (int)(p5_state.stroke_width / 2.0f);
+        base_segments += (int)(p5_state.stroke_weight / 2.0f);
     }
     const int segments = fmaxf(16, fminf(128, base_segments)); // Clamp between 16-128 segments
     
@@ -976,7 +977,7 @@ void p5_ellipse(float x, float y, float w, float h) {
         sgp_set_color(p5_state.stroke_color.r, p5_state.stroke_color.g, 
                       p5_state.stroke_color.b, p5_state.stroke_color.a);
         
-        if (p5_state.stroke_width <= 1.0f) {
+        if (p5_state.stroke_weight <= 1.0f) {
             // Use thin line segments for thin strokes
             for (int i = 0; i < segments; i++) {
                 float angle1 = (float)i / segments * TWO_PI;
@@ -991,7 +992,7 @@ void p5_ellipse(float x, float y, float w, float h) {
             }
         } else {
             // Draw thick stroke as annulus (ring) - outer ellipse minus inner ellipse
-            float half_stroke = p5_state.stroke_width * 0.5f;
+            float half_stroke = p5_state.stroke_weight * 0.5f;
             float outer_rx = rx + half_stroke;
             float outer_ry = ry + half_stroke;
             float inner_rx = fmaxf(0.1f, rx - half_stroke);
@@ -1044,7 +1045,7 @@ void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
             x2, y2,
             x3, y3
         };
-        p5__draw_thick_polygon_outline(triangle_points, 3, p5_state.stroke_width, true);
+        p5__draw_thick_polygon_outline(triangle_points, 3, p5_state.stroke_weight, true);
     }
     
     p5__restore_transform();
@@ -1076,7 +1077,7 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
             x3, y3,
             x4, y4
         };
-        p5__draw_thick_polygon_outline(quad_points, 4, p5_state.stroke_width, true);
+        p5__draw_thick_polygon_outline(quad_points, 4, p5_state.stroke_weight, true);
     }
     
     p5__restore_transform();
@@ -1138,7 +1139,7 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
             float x2 = cx + cosf(angle2) * rx;
             float y2 = cy + sinf(angle2) * ry;
             
-            p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_width);
+            p5__draw_thick_line(x1, y1, x2, y2, p5_state.stroke_weight);
         }
         
         // Draw closing lines based on arc mode
@@ -1149,11 +1150,11 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
         
         if (mode == P5_CHORD) {
             // Connect arc endpoints with straight thick line
-            p5__draw_thick_line(start_x, start_y, stop_x, stop_y, p5_state.stroke_width);
+            p5__draw_thick_line(start_x, start_y, stop_x, stop_y, p5_state.stroke_weight);
         } else if (mode == P5_PIE) {
             // Connect arc endpoints to center with thick lines
-            p5__draw_thick_line(cx, cy, start_x, start_y, p5_state.stroke_width);
-            p5__draw_thick_line(cx, cy, stop_x, stop_y, p5_state.stroke_width);
+            p5__draw_thick_line(cx, cy, start_x, start_y, p5_state.stroke_weight);
+            p5__draw_thick_line(cx, cy, stop_x, stop_y, p5_state.stroke_weight);
         }
         // P5_OPEN mode draws no closing lines
     }
