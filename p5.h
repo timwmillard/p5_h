@@ -166,7 +166,6 @@ void p5_stroke(unsigned int r, unsigned int g, unsigned int b);
 void p5_stroke_color(p5_color_t color);
 void p5_stroke_alpha(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
 void p5_stroke_weight(float weight);
-void p5_stroke_hex(const char* hex_string);
 void p5_background_named(const char* color_name);
 void p5_no_fill(void);
 void p5_no_stroke(void);
