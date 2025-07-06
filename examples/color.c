@@ -13,13 +13,16 @@ void setup() {
   textOutput();
 
   createCanvas(720, 400);
-  angleMode(DEGREES);
 
   // CSS color name
   // For a list of available color names, see:
   // https://www.w3.org/wiki/CSS/Properties/color/keywords
-  background(COLOR("steelblue"));
+}
 
+void draw() {
+  angleMode(DEGREES);
+
+  background(COLOR("steelblue"));
   // Set width of stroke to 4 units
   strokeWeight(4);
 
@@ -98,11 +101,6 @@ void setup() {
   // Draw without inner color
   noFill();
   quad(500, 250, 550, 200, 700, 300, 650, 350);
-}
-
-void draw() {
-    // This is called every frame but can be empty
-    // Shapes from setup() will persist like in p5.js
 }
 
 P5_MAIN(720, 400, "Shape Primitives");

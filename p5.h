@@ -338,6 +338,10 @@ typedef struct {
 
 // Drawing state (internal)
 typedef struct {
+    bool setup_done;
+    void (*setup)(void);
+    void (*frame)(void);
+
     p5_color_t fill_color;
     p5_color_t stroke_color;
     bool fill_enabled;
@@ -391,19 +395,10 @@ void p5_sokol_frame(void) {
         sgp_project(0.0f, (float)sapp_width(), 0.0f, (float)sapp_height());
     }
     
-    // P5.js compatibility: Execute setup() drawing commands every frame
-    // This simulates canvas persistence by redrawing setup() content each frame
-    p5_state.in_setup_mode = true;
-    if (!p5_state.setup_has_drawn) {
+    if (!p5_state.setup_done) {
         setup();  // Call user setup - this will draw every frame now
-        p5_state.setup_has_drawn = true;
-    } else {
-        // Re-execute setup() drawing commands to maintain image persistence
-        setup();  // Setup always gets called to redraw its content
+        p5_state.setup_done = true;
     }
-    p5_state.in_setup_mode = false;
-    
-    // Call draw() for any additional per-frame drawing
     draw();
     
     sg_begin_pass(&(sg_pass){
@@ -602,8 +597,7 @@ void p5_init(void) {
     p5_state.canvas.height = 0;
     p5_state.canvas.x = 0;
     p5_state.canvas.y = 0;
-    p5_state.setup_has_drawn = false;  // Initialize p5.js compatibility flag
-    p5_state.in_setup_mode = false;    // Not in setup initially
+    p5_state.setup_done = false;
     p5_state.angle_mode = P5_RADIANS;  // Default to radians like p5.js
     p5_state.color_mode = P5_RGB;      // Default to RGB
     p5_state.color_maxes[0] = 255.0f;  // R max

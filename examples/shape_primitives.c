@@ -13,7 +13,9 @@ void setup() {
   // textOutput();
 
   createCanvas(720, 400);
+}
 
+void draw() {
   // Use degrees as units for angles
   // The arc() function uses angles
   angleMode(DEGREES);
@@ -60,10 +62,6 @@ void setup() {
   quad(500, 250, 550, 200, 700, 300, 650, 350);
 }
 
-void draw() {
-    // This is called every frame but can be empty
-    // Shapes from setup() will persist like in p5.js
-}
 
 P5_MAIN(720, 400, "Shape Primitives");
 
