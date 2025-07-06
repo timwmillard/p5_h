@@ -904,7 +904,8 @@ void p5_line(float x1, float y1, float x2, float y2) {
 }
 
 void p5_rect(float x, float y, float w, float h) {
-    sgp_push_transform();
+    p5__apply_transform();
+    // sgp_push_transform();
     
     // Fill
     if (p5_state.fill_enabled) {
@@ -928,7 +929,8 @@ void p5_rect(float x, float y, float w, float h) {
         sgp_draw_filled_rects(rects, 4);
     }
     
-    sgp_pop_transform();
+    p5__restore_transform();
+    // sgp_pop_transform();
 }
 
 void p5_circle(float x, float y, float diameter) {
