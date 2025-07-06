@@ -1,93 +1,117 @@
+# Cross-platform Makefile for p5.h template projects
+# Usage: make <target> where <target> is the name of a .c file without extension
+# Example: make canvas (builds canvas.c)
 
-CFLAGS +=-Ideps
+# Platform detection
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
 
-LIBS +=-framework Cocoa -framework QuartzCore -framework Metal -framework MetalKit
-CFLAGS +=-ObjC
-DEFS +=-DSOKOL_METAL
+# Common compiler flags
+CFLAGS = -std=c99 -Wall -Wextra -O2
+INCLUDES = -Ideps
 
-CFLAGS += $(DEFS)
+# Platform-specific configuration
+ifeq ($(UNAME_S), Linux)
+    PLATFORM = linux
+    BACKEND = -DSOKOL_GLCORE
+    LIBS = -lGL -lm -lpthread -ldl
+    CFLAGS += -D_GNU_SOURCE
+endif
 
-.PHONY: shader
+ifeq ($(UNAME_S), Darwin)
+    PLATFORM = macos
+    BACKEND = -DSOKOL_METAL
+    LIBS = -framework Cocoa -framework QuartzCore -framework Metal -framework MetalKit
+    CFLAGS += -ObjC
+    CC = clang
+endif
+
+ifeq ($(OS), Windows_NT)
+    PLATFORM = windows
+    BACKEND = -DSOKOL_D3D11
+    LIBS = -lgdi32 -lole32 -ld3d11 -ldxgi
+    CFLAGS += -D_WIN32_WINNT=0x0601
+    EXE_SUFFIX = .exe
+endif
+
+# Emscripten web build
+ifeq ($(MAKECMDGOALS), web)
+    CC = emcc
+    PLATFORM = web
+    BACKEND = -DSOKOL_GLES3
+    CFLAGS = -std=c99 -O2 -s USE_WEBGL2=1 -s FULL_ES3=1
+    LIBS = -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 --shell-file deps/shell.html
+    EXE_SUFFIX = .html
+endif
+
+# Default compiler
+CC ?= gcc
+
+# Debug build option
+ifeq ($(BUILD), debug)
+    CFLAGS += -g -O0 -DDEBUG
+else
+    CFLAGS += -O2 -DNDEBUG
+endif
+
+CFLAGS += $(BACKEND) $(INCLUDES)
 
 DEPS = deps/sokol_app.h \
 	   deps/sokol_gfx.h \
 	   deps/sokol_glue.h \
 	   deps/sokol_gp.h
 
+.PHONY: all clean help web
+
+# Default target
+all: canvas
+
+# Help target
+help:
+	@echo "Cross-platform p5.h template build system"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make <target>             - Build target.c (e.g., make canvas)"
+	@echo "  make clean                - Clean build artifacts"
+	@echo "  make help                 - Show this help"
+	@echo "  make web TARGET=<target>  - Show this help"
+	@echo ""
+	@echo "Build options:"
+	@echo "  BUILD=debug        - Build with debug symbols"
+	@echo "  CC=<compiler>      - Use specific compiler"
+	@echo ""
+	@echo "Platform: $(PLATFORM)"
+	@echo "Backend: $(BACKEND)"
+
 deps/deps.o: deps/deps.c $(DEPS)
-	clang -c $(CFLAGS) -o deps/deps.o deps/deps.c
+	$(CC) -c $(CFLAGS) -o deps/deps.o deps/deps.c
 
-demo: src/demo.c p5.h deps/deps.o
-	clang -o demo $(CFLAGS) $(LIBS) deps/deps.o src/demo.c
+# Generic rule for building any .c file
+%: %.c $(DEPS) p5.h
+	@echo "Building $@ for $(PLATFORM)..."
+	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $< $(LIBS) deps/deps.o
+	@echo "Build complete: $@$(EXE_SUFFIX)"
 
-p5style: src/p5_style_demo.c p5.h deps/deps.o
-	clang -o p5style $(CFLAGS) $(LIBS) deps/deps.o src/p5_style_demo.c
+# Web build target
+web: $(TARGET).c $(DEPS) p5.h
+	@echo "Building $(TARGET) for web..."
+	$(CC) $(CFLAGS) -o $(TARGET)$(EXE_SUFFIX) $(TARGET).c $(LIBS) deps/deps.o
+	@echo "Web build complete: $(TARGET)$(EXE_SUFFIX)"
 
-canvas: src/canvas_demo.c p5.h deps/deps.o
-	clang -o canvas $(CFLAGS) $(LIBS) deps/deps.o src/canvas_demo.c
+# Clean target
+clean:
+	@echo "Cleaning build artifacts..."
+	rm -f *.exe *.html *.js *.wasm *.data
+	rm -f canvas
+	rm -rf *.dSYM
+	rm -f compile_flags.txt
+	@echo "Clean complete"
 
-shapes: src/shapes_demo.c p5.h deps/deps.o
-	clang -o shapes $(CFLAGS) $(LIBS) deps/deps.o src/shapes_demo.c
+# Example targets
+src/demo: src/demo.c $(DEPS)
 
-setup_draw: src/setup_draw_demo.c p5.h deps/deps.o
-	clang -o setup_draw $(CFLAGS) $(LIBS) deps/deps.o src/setup_draw_demo.c
-
-p5js_style: src/p5js_style_demo.c p5.h deps/deps.o
-	clang -o p5js_style $(CFLAGS) $(LIBS) deps/deps.o src/p5js_style_demo.c
-
-p5js_test: src/p5js_compatible_test.c p5.h deps/deps.o
-	clang -o p5js_test $(CFLAGS) $(LIBS) deps/deps.o src/p5js_compatible_test.c
-
-p5js_final: src/p5js_final_test.c p5.h deps/deps.o
-	clang -o p5js_final $(CFLAGS) $(LIBS) deps/deps.o src/p5js_final_test.c
-
-p5js_seamless: src/p5js_seamless_test.c p5.h deps/deps.o
-	clang -o p5js_seamless $(CFLAGS) $(LIBS) deps/deps.o src/p5js_seamless_test.c
-
-examples/shape_primitives: examples/shape_primitives.c p5.h deps/deps.o
-	clang -o examples/shape_primitives $(CFLAGS) $(LIBS) deps/deps.o examples/shape_primitives.c
-
-examples/color: examples/color.c p5.h deps/deps.o
-	clang -o examples/color $(CFLAGS) $(LIBS) deps/deps.o examples/color.c
-
-examples/point: examples/point.c p5.h deps/deps.o
-	clang -o examples/point $(CFLAGS) $(LIBS) deps/deps.o examples/point.c
-
-run: demo
-	@./demo
-
-run_p5style: p5style
-	@./p5style
-
-run_canvas: canvas
-	@./canvas
-
-run_shapes: shapes
-	@./shapes
-
-run_setup_draw: setup_draw
-	@./setup_draw
-
-run_p5js_style: p5js_style
-	@./p5js_style
-
-run_p5js_test: p5js_test
-	@./p5js_test
-
-run_p5js_final: p5js_final
-	@./p5js_final
-
-run_p5js_seamless: p5js_seamless
-	@./p5js_seamless
-
-run_shape_primitives: examples/shape_primitives
-	@./examples/shape_primitives
-
-run_color: examples/color
-	@./examples/color
-
-run_point: examples/point
-	@./examples/point
+demo: src/demo
+	@src/demo
 
 compile_flags.txt: FORCE
 	@echo "Generating compile_flags.txt for IDE support"
@@ -95,7 +119,7 @@ compile_flags.txt: FORCE
 
 FORCE:
 
-
+# Update Depedencies
 sokol:
 	wget -O deps/sokol_app.h https://raw.githubusercontent.com/floooh/sokol/refs/heads/master/sokol_app.h
 	wget -O deps/sokol_gfx.h https://raw.githubusercontent.com/floooh/sokol/refs/heads/master/sokol_gfx.h
@@ -103,15 +127,4 @@ sokol:
 
 sokol_gp:
 	wget -O deps/sokol_gp.h https://raw.githubusercontent.com/edubart/sokol_gp/master/sokol_gp.h
-
-# Include test targets from tests/Makefile
-include tests/Makefile
-
-# Clean everything including tests
-clean: clean_tests
-	rm -f demo p5style canvas shapes
-	rm -f deps/deps.o
-	rm -f compile_flags.txt
-
-.PHONY: clean
 
