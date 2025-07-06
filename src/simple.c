@@ -17,15 +17,15 @@ void setup() {
 }
 
 void draw() {
-    background(COLOR("green"));
-    fill(COLOR("red"));
-    stroke(COLOR("blue"));
-    strokeWeight(30);
+    background(COLOR("#3344ff"));
+    fill(COLOR("#38f2ff"));
+    stroke(COLOR("#388fff"));
+    strokeWeight(2);
     // rotate(45);
-    rect(50, 50, 100, 200);
+    // rect(50, 50, 100, 200);
 
     // noStroke();
-    ellipse(300, 300, 300, 200);
+    ellipse(150, 150, 200, 200);
 }
 
 P5_MAIN(640, 480, "Handmade");
