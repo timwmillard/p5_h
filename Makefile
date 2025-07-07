@@ -16,6 +16,7 @@ ifeq ($(UNAME_S), Linux)
     BACKEND = -DSOKOL_GLCORE
     LIBS = -lGL -lm -lpthread -ldl
     CFLAGS += -D_GNU_SOURCE
+    CC = gcc
 endif
 
 ifeq ($(UNAME_S), Darwin)
@@ -32,6 +33,10 @@ ifeq ($(OS), Windows_NT)
     LIBS = -lgdi32 -lole32 -ld3d11 -ldxgi
     CFLAGS += -D_WIN32_WINNT=0x0601
     EXE_SUFFIX = .exe
+    CC = gcc
+ifneq ($(BUILD), debug)
+    CFLAGS += -mwindows
+endif
 endif
 
 # Emscripten web build
@@ -44,8 +49,6 @@ ifeq ($(MAKECMDGOALS), web)
     EXE_SUFFIX = .html
 endif
 
-# Default compiler
-CC ?= gcc
 
 # Debug build option
 ifeq ($(BUILD), debug)
@@ -87,9 +90,9 @@ deps/deps.o: deps/deps.c $(DEPS)
 	$(CC) -c $(CFLAGS) -o deps/deps.o deps/deps.c
 
 # Generic rule for building any .c file
-%: %.c $(DEPS) p5.h
+%: %.c deps/deps.o p5.h
 	@echo "Building $@ for $(PLATFORM)..."
-	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $< $(LIBS) deps/deps.o
+	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $< deps/deps.o $(LIBS)
 	@echo "Build complete: $@$(EXE_SUFFIX)"
 
 # Web build target
