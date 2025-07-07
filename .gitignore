@@ -16,3 +16,5 @@ compile_flags.txt
 !/examples/*.html
 !/examples/.gitignore
 
+.worktree/
+
