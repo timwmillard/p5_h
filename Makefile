@@ -104,7 +104,8 @@ web: $(TARGET).c $(DEPS) p5.h
 # Clean target
 clean:
 	@echo "Cleaning build artifacts..."
-	rm -f *.exe *.html *.js *.wasm *.data
+	rm -f */*.exe *.html *.js *.wasm *.data */*.o
+	rm -f src/demo src/p5_style src/simple
 	rm -f canvas
 	rm -rf *.dSYM
 	rm -f compile_flags.txt
@@ -118,6 +119,10 @@ examples/%: examples/%.c $(DEPS)
 
 %: src/%
 	@$<
+
+demo: src/demo
+p5_style: src/p5_style
+simple: src/simple
 
 compile_flags.txt: FORCE
 	@echo "Generating compile_flags.txt for IDE support"
