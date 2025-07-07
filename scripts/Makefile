@@ -16,6 +16,7 @@ ifeq ($(UNAME_S), Linux)
     BACKEND = -DSOKOL_GLCORE
     LIBS = -lGL -lm -lpthread -ldl
     CFLAGS += -D_GNU_SOURCE
+    CC = gcc
 endif
 
 ifeq ($(UNAME_S), Darwin)
@@ -32,6 +33,10 @@ ifeq ($(OS), Windows_NT)
     LIBS = -lgdi32 -lole32 -ld3d11 -ldxgi
     CFLAGS += -D_WIN32_WINNT=0x0601
     EXE_SUFFIX = .exe
+    CC = gcc
+ifneq ($(BUILD), debug)
+    CFLAGS += -mwindows
+endif
 endif
 
 # Emscripten web build
@@ -43,9 +48,6 @@ ifeq ($(MAKECMDGOALS), web)
     LIBS = -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 --shell-file deps/shell.html
     EXE_SUFFIX = .html
 endif
-
-# Default compiler
-CC ?= gcc
 
 # Debug build option
 ifeq ($(BUILD), debug)
