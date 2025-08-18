@@ -11,6 +11,7 @@ void setup() {
 }
 
 void draw() {
+    background(COLOR("#345"));
 }
 
 P5_MAIN(600, 400, "p5 Demo");

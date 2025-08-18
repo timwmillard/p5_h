@@ -107,6 +107,16 @@ void draw(void);     // User-defined draw function (called every frame)
 // TYPES
 //
 
+// Vector 2 dimension
+typedef struct {
+    float x, y;
+} p5_Vector2;
+
+// Vector 3 dimension
+typedef struct {
+    float x, y, z;
+} p5_Vector3;
+
 // Color structure
 typedef struct {
     float r, g, b, a;
@@ -150,6 +160,16 @@ typedef enum {
 //
 
 void p5_init(void);
+
+//
+// VECTOR FUNCTIONS
+//
+
+char *p5_vector2_to_string(p5_Vector2 vec);
+void p5_vector2_set(p5_Vector2 *vec, float x, float y);
+p5_Vector2 p5_vector2_copy(p5_Vector2 vec);
+p5_Vector2 p5_vector2_add(p5_Vector2 vec1, p5_Vector2 vec2);
+// void p5_vector2_add_vector(p5_Vector2 *vec1, p5_Vector2 vec2);
 
 //
 // CANVAS FUNCTIONS
@@ -336,6 +356,26 @@ static inline void arc_with_mode(float x, float y, float w, float h, float start
 
 #ifdef P5_IMPLEMENTATION
 
+// Private buitin types
+typedef struct {
+    float v[2];
+} vec2;
+
+typedef struct {
+    float v[3];
+} vec3;
+
+typedef struct {
+    float v[4];
+} vec4;
+
+typedef struct {
+    float v[16];
+} mat4;
+
+// TODO: inline shape_glsl.h
+#include "shader/shape_glsl.h"
+
 // Transform state (internal)
 typedef struct {
     float tx, ty;     // translation
@@ -354,6 +394,7 @@ typedef struct {
 typedef struct {
     p5_Color fill_color;
     p5_Color stroke_color;
+    p5_Color background_color;
 
     bool fill_enabled;
     bool stroke_enabled;
@@ -403,12 +444,20 @@ void p5_sokol_frame(void)
     }
     p5_state.in_setup_mode = false;
 
+
+    sg_begin_pass(&(sg_pass){
+        .action =(sg_pass_action) {
+            .colors[0] = { 
+                .load_action = SG_LOADACTION_CLEAR,
+                .clear_value = *(sg_color*)&p5_state.background_color
+            },
+        },
+        .swapchain = sglue_swapchain(),
+    });
+
     // Call draw() for any additional per-frame drawing
     draw();
 
-    sg_begin_pass(&(sg_pass){
-        .swapchain = sglue_swapchain()
-    });
     sg_end_pass();
     sg_commit();
 }
@@ -498,10 +547,12 @@ int p5_window_height(void) {
 
 void p5_background(p5_Color color)
 {
+    p5_state.background_color = color;
 }
 
 void p5_background_rgb(unsigned int r, unsigned int g, unsigned int b)
 {
+    p5_state.background_color = p5_color_rgb(r, g, b);
 }
 
 // Color functions
