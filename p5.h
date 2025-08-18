@@ -359,19 +359,19 @@ static inline void arc_with_mode(float x, float y, float w, float h, float start
 // Private buitin types
 typedef struct {
     float v[2];
-} vec2;
+} p5_vec2;
 
 typedef struct {
     float v[3];
-} vec3;
+} p5_vec3;
 
 typedef struct {
     float v[4];
-} vec4;
+} p5_vec4;
 
 typedef struct {
     float v[16];
-} mat4;
+} p5_mat4;
 
 // TODO: inline shape_glsl.h
 #include "shader/shape_glsl.h"
@@ -381,32 +381,40 @@ typedef struct {
     float tx, ty;     // translation
     float rot;        // rotation
     float sx, sy;     // scale
-} p5_transform_t;
+} p5_Transform;
 
 // Canvas state (internal)
 typedef struct {
     int width, height;    // Canvas dimensions
     int x, y;            // Canvas position within window
     bool created;        // Whether canvas has been created
-} p5_canvas_t;
+} p5_Canvas;
 
 // Drawing state (internal)
 typedef struct {
     p5_Color fill_color;
     p5_Color stroke_color;
-    p5_Color background_color;
 
-    bool fill_enabled;
-    bool stroke_enabled;
+    bool has_fill;
+    bool has_stroke;
     float stroke_width;
-    p5_transform_t transform;
-    p5_transform_t transform_stack[32];
-    int transform_stack_depth;
-    p5_canvas_t canvas;
-    bool setup_has_drawn;  // Internal flag for p5.js compatibility  
-    bool in_setup_mode;    // Currently executing setup() - for p5.js compatibility
     p5_AngleMode angle_mode;
     p5_ColorMode color_mode;
+    p5_ArcMode arc_mode;
+
+    p5_Transform transform;
+} p5_Draw;
+
+typedef struct {
+    p5_Color background_color;
+
+    p5_Draw draw;
+    p5_Draw draw_stack[32];
+    int draw_stack_depth;
+
+    p5_Canvas canvas;
+    bool setup_has_drawn;  // Internal flag for p5.js compatibility  
+    bool in_setup_mode;    // Currently executing setup() - for p5.js compatibility
     float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
 } p5_State;
 
@@ -481,13 +489,13 @@ void p5_sokol_event(const sapp_event* ev)
 //
 
 void p5_init(void) {
-    p5_state.fill_color = (p5_Color){1.0f, 1.0f, 1.0f, 1.0f};
-    p5_state.stroke_color = (p5_Color){0.0f, 0.0f, 0.0f, 1.0f};
-    p5_state.fill_enabled = true;
-    p5_state.stroke_enabled = true;
-    p5_state.stroke_width = 1.0f;
-    p5_state.transform = (p5_transform_t){0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
-    p5_state.transform_stack_depth = 0;
+    p5_state.draw.fill_color = (p5_Color){1.0f, 1.0f, 1.0f, 1.0f};
+    p5_state.draw.stroke_color = (p5_Color){0.0f, 0.0f, 0.0f, 1.0f};
+    p5_state.draw.has_fill = true;
+    p5_state.draw.has_stroke = true;
+    p5_state.draw.stroke_width = 1.0f;
+    p5_state.draw.transform = (p5_Transform){0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
+    p5_state.draw_stack_depth = 0;
     p5_state.canvas.created = false;
     p5_state.canvas.width = 0;
     p5_state.canvas.height = 0;
@@ -495,8 +503,8 @@ void p5_init(void) {
     p5_state.canvas.y = 0;
     p5_state.setup_has_drawn = false;  // Initialize p5.js compatibility flag
     p5_state.in_setup_mode = false;    // Not in setup initially
-    p5_state.angle_mode = P5_RADIANS;  // Default to radians like p5.js
-    p5_state.color_mode = P5_RGB;      // Default to RGB
+    p5_state.draw.angle_mode = P5_RADIANS;  // Default to radians like p5.js
+    p5_state.draw.color_mode = P5_RGB;      // Default to RGB
     p5_state.color_maxes[0] = 255.0f;  // R max
     p5_state.color_maxes[1] = 255.0f;  // G max
     p5_state.color_maxes[2] = 255.0f;  // B max
@@ -565,57 +573,57 @@ p5_Color p5_color_rbga(unsigned int r, unsigned int g, unsigned int b, unsigned 
 }
 
 void p5_fill(p5_Color color) {
-    p5_state.fill_color = color;
-    p5_state.fill_enabled = true;
+    p5_state.draw.fill_color = color;
+    p5_state.draw.has_fill = true;
 }
 
 void p5_fill_rgb(unsigned int r, unsigned int g, unsigned int b) {
-    p5_state.fill_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
-    p5_state.fill_enabled = true;
+    p5_state.draw.fill_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
+    p5_state.draw.has_fill = true;
 }
 
 
 void p5_fill_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
-    p5_state.fill_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
-    p5_state.fill_enabled = true;
+    p5_state.draw.fill_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+    p5_state.draw.has_fill = true;
 }
 
 void p5_stroke(p5_Color color) {
-    p5_state.stroke_color = color;
-    p5_state.stroke_enabled = true;
+    p5_state.draw.stroke_color = color;
+    p5_state.draw.has_stroke = true;
 }
 
 void p5_stroke_rgb(unsigned int r, unsigned int g, unsigned int b) {
-    p5_state.stroke_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
-    p5_state.stroke_enabled = true;
+    p5_state.draw.stroke_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
+    p5_state.draw.has_stroke = true;
 }
 
 
 void p5_stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
-    p5_state.stroke_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
-    p5_state.stroke_enabled = true;
+    p5_state.draw.stroke_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+    p5_state.draw.has_stroke = true;
 }
 
 void p5_stroke_weight(float weight) {
-    p5_state.stroke_width = weight;
+    p5_state.draw.stroke_width = weight;
 }
 
 void p5_no_fill(void) {
-    p5_state.fill_enabled = false;
+    p5_state.draw.has_fill = false;
 }
 
 void p5_no_stroke(void) {
-    p5_state.stroke_enabled = false;
+    p5_state.draw.has_stroke = false;
 }
 
 // Angle mode functions
 void p5_angle_mode(p5_AngleMode mode) {
-    p5_state.angle_mode = mode;
+    p5_state.draw.angle_mode = mode;
 }
 
 // Color mode functions
 void p5_color_mode(p5_ColorMode mode) {
-    p5_state.color_mode = mode;
+    p5_state.draw.color_mode = mode;
     // Set default maximums based on color mode
     if (mode == P5_RGB) {
         p5_state.color_maxes[0] = 255.0f;  // R
@@ -631,7 +639,7 @@ void p5_color_mode(p5_ColorMode mode) {
 }
 
 void p5_color_mode_range(p5_ColorMode mode, float max1, float max2, float max3, float maxA) {
-    p5_state.color_mode = mode;
+    p5_state.draw.color_mode = mode;
     p5_state.color_maxes[0] = max1;
     p5_state.color_maxes[1] = max2;
     p5_state.color_maxes[2] = max3;

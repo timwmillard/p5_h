@@ -1,6 +1,6 @@
-@ctype mat4 mat4
-@ctype vec4 vec4
-@ctype vec2 vec2 
+@ctype mat4 p5_mat4
+@ctype vec4 p5_vec4
+@ctype vec2 p5_vec2 
 
 @vs vs
 layout(binding=0) uniform vs_params {

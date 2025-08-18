@@ -38,22 +38,22 @@
 #define UB_fs_params (1)
 #pragma pack(push,1)
 SOKOL_SHDC_ALIGN(16) typedef struct vs_params_t {
-    mat4 mvp;
-    vec2 position;
-    vec2 size;
-    vec2 screen_size;
+    p5_mat4 mvp;
+    p5_vec2 position;
+    p5_vec2 size;
+    p5_vec2 screen_size;
     uint8_t _pad_88[8];
 } vs_params_t;
 #pragma pack(pop)
 #pragma pack(push,1)
 SOKOL_SHDC_ALIGN(16) typedef struct fs_params_t {
-    vec4 fill_color;
-    vec4 stroke_color;
+    p5_vec4 fill_color;
+    p5_vec4 stroke_color;
     float smoothness;
     float stroke_width;
     int shape_type;
     float corner_radius;
-    vec2 quad_skew;
+    p5_vec2 quad_skew;
     uint8_t _pad_56[8];
 } fs_params_t;
 #pragma pack(pop)
