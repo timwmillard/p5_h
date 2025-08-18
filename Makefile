@@ -61,8 +61,7 @@ CFLAGS += $(BACKEND) $(INCLUDES)
 
 DEPS = deps/sokol_app.h \
 	   deps/sokol_gfx.h \
-	   deps/sokol_glue.h \
-	   deps/sokol_gp.h
+	   deps/sokol_glue.h
 
 .PHONY: all clean help web
 
@@ -117,12 +116,18 @@ src/%: src/%.c $(DEPS)
 # Example targets
 examples/%: examples/%.c $(DEPS)
 
+# Example targets
+work/%: work/%.c $(DEPS)
+
 %: src/%
 	@$<
 
 demo: src/demo
 p5_style: src/p5_style
 simple: src/simple
+
+work: work/main
+	@./work/main
 
 compile_flags.txt: FORCE
 	@echo "Generating compile_flags.txt for IDE support"

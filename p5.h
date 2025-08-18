@@ -66,7 +66,9 @@ LICENSE:
 
 #ifdef P5_SOKOL
 // sokol dependencies
+#ifndef SOKOL_IMPL
 #define SOKOL_IMPL
+#endif
 #include "sokol_app.h"
 #include "sokol_gfx.h"
 #include "sokol_glue.h"
@@ -86,7 +88,7 @@ LICENSE:
 // TODO macro for unimplemented functions
 #define TODO(msg) do { \
     printf("[WARNING] TODO: %s (function: %s, file: %s, line: %d)\n", \
-           msg, _func_, _FILE_, _LINE_); \
+           msg, __func__, __FILE__, __LINE__); \
 } while(0)
 
 //////////////////////////////////////////////////////////////////////////////
@@ -352,6 +354,7 @@ typedef struct {
 typedef struct {
     p5_Color fill_color;
     p5_Color stroke_color;
+
     bool fill_enabled;
     bool stroke_enabled;
     float stroke_width;
@@ -364,14 +367,14 @@ typedef struct {
     p5_AngleMode angle_mode;
     p5_ColorMode color_mode;
     float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
-} p5_state_t;
+} p5_State;
 
 
 //
 // GLOBAL STATE
 //
 
-p5_state_t p5_state;
+p5_State p5_state;
 
 //
 // SOKOL WRAPPER FUNCTIONS (only compiled when app mode is enabled)
@@ -383,9 +386,7 @@ void p5_sokol_init(void) {
         .environment = sglue_environment(),
     });
     
-    sgp_setup(&(sgp_desc){0});
     p5_init();
-    // setup() will be called in first frame when graphics context is active
 }
 
 void p5_sokol_frame(void)
