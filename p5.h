@@ -472,7 +472,7 @@ static void p5_draw_sdf_shape(float x, float y, float w, float h,
     fs_params_t fs_params = {
         .fill_color = *(p5_vec4*)&p5_state.draw.fill_color,
         .stroke_color = *(p5_vec4*)&p5_state.draw.stroke_color,
-        .smoothness = 0.01f,
+        .smoothness = 0.03f,
         // .stroke_width = p5_state.draw.stroke_width / (w * 0.5f), // Normalize stroke width
         .shape_type = shape,
         .corner_radius = corner_radius,
@@ -579,15 +579,15 @@ void p5_init(void) {
                     [ATTR_shape_pos].format = SG_VERTEXFORMAT_FLOAT2,
                 },
             },
-            // .colors[0] = {
-            //     .blend = {
-            //         .enabled = true,
-            //         .src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA,
-            //         .dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
-            //         .src_factor_alpha = SG_BLENDFACTOR_ONE,
-            //         .dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
-            //     }
-            // },
+            .colors[0] = {
+                .blend = {
+                    .enabled = true,
+                    .src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA,
+                    .dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+                    .src_factor_alpha = SG_BLENDFACTOR_ONE,
+                    .dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+                }
+            },
     });
 
     p5_state.bind.vertex_buffers[0] = p5_state.vertex_buffer;

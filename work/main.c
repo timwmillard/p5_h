@@ -10,10 +10,12 @@
 void setup() {
 }
 
+int x, y = 0;
+
 void draw() {
-    background(COLOR("#345"));
-    fill(COLOR("#a22"));
-    circle(200, 100, 150);
+    background(COLOR("#062764"));
+    fill(COLOR("#157ed4"));
+    circle(x++, y++, 100);
 }
 
 P5_MAIN(600, 400, "p5 Demo");
