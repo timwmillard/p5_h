@@ -101,6 +101,7 @@ LICENSE:
 // Forward declarations for callback functions (only available when app mode is enabled)
 void setup(void);    // User-defined setup function (called once)
 void draw(void);     // User-defined draw function (called every frame)
+// void preload(void);
 #endif
 
 //
@@ -376,6 +377,13 @@ typedef struct {
 // TODO: inline shape_glsl.h
 #include "shader/shape_glsl.h"
 
+typedef enum {
+    SHAPE_CIRCLE,
+    SHAPE_RECT,
+    SHAPE_TRIANGLE,
+    SHAPE_QUAD,
+} p5_Shape;
+
 // Transform state (internal)
 typedef struct {
     float tx, ty;     // translation
@@ -416,6 +424,10 @@ typedef struct {
     bool setup_has_drawn;  // Internal flag for p5.js compatibility  
     bool in_setup_mode;    // Currently executing setup() - for p5.js compatibility
     float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
+    
+    sg_pipeline pip;
+    sg_bindings bind;
+    sg_buffer vertex_buffer;
 } p5_State;
 
 
@@ -423,7 +435,7 @@ typedef struct {
 // GLOBAL STATE
 //
 
-p5_State p5_state;
+static p5_State p5_state;
 
 //
 // SOKOL WRAPPER FUNCTIONS (only compiled when app mode is enabled)
@@ -436,6 +448,42 @@ void p5_sokol_init(void) {
     });
     
     p5_init();
+
+
+}
+
+void init_shape_pipeline()
+{
+}
+
+static void p5_draw_sdf_shape(float x, float y, float w, float h, 
+                             p5_Shape shape, float corner_radius, float skew_x, float skew_y) 
+{
+    sg_apply_pipeline(p5_state.pip);
+    sg_apply_bindings(&p5_state.bind);
+
+    vs_params_t vs_params = {
+        .position = {x, y},
+        .size = {w * 0.5f, h * 0.5f},
+        .screen_size = {p5_state.canvas.width, p5_state.canvas.height},
+    };
+    sg_apply_uniforms(UB_vs_params, &SG_RANGE(vs_params));
+
+    fs_params_t fs_params = {
+        .fill_color = *(p5_vec4*)&p5_state.draw.fill_color,
+        .stroke_color = *(p5_vec4*)&p5_state.draw.stroke_color,
+        .smoothness = 0.02f,
+        .shape_type = shape,
+        .corner_radius = corner_radius,
+        .quad_skew = {skew_x, skew_y},
+    };
+    sg_apply_uniforms(UB_fs_params, &SG_RANGE(fs_params));
+
+    sg_draw(0, 6, 1);
+}
+void p5_circle(float x, float y, float diameter)
+{
+    p5_draw_sdf_shape(x, y, diameter, diameter, SHAPE_CIRCLE, 0.0f, 0.0f, 0.0f);
 }
 
 void p5_sokol_frame(void)
@@ -488,6 +536,12 @@ void p5_sokol_event(const sapp_event* ev)
 // PUBLIC API IMPLEMENTATION
 //
 
+// Quad vertices for SDF rendering
+static float quad_vertices[] = {
+    -1.0f, -1.0f,  -1.0f,  1.0f,   1.0f, -1.0f,
+     1.0f, -1.0f,   1.0f,  1.0f,  -1.0f,  1.0f
+};
+
 void p5_init(void) {
     p5_state.draw.fill_color = (p5_Color){1.0f, 1.0f, 1.0f, 1.0f};
     p5_state.draw.stroke_color = (p5_Color){0.0f, 0.0f, 0.0f, 1.0f};
@@ -509,6 +563,34 @@ void p5_init(void) {
     p5_state.color_maxes[1] = 255.0f;  // G max
     p5_state.color_maxes[2] = 255.0f;  // B max
     p5_state.color_maxes[3] = 255.0f;  // A max
+
+    p5_state.vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .data = SG_RANGE(quad_vertices),
+        .usage.vertex_buffer = true,
+        .usage.immutable = true,
+    });
+
+    sg_shader shd = sg_make_shader(shape_shader_desc(sg_query_backend()));
+    
+    p5_state.pip = sg_make_pipeline(&(sg_pipeline_desc){
+            .shader = shd,
+            .layout = {
+                .attrs = {
+                    [ATTR_shape_pos].format = SG_VERTEXFORMAT_FLOAT2,
+                },
+            },
+            // .colors[0] = {
+            //     .blend = {
+            //         .enabled = true,
+            //         .src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA,
+            //         .dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+            //         .src_factor_alpha = SG_BLENDFACTOR_ONE,
+            //         .dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+            //     }
+            // },
+    });
+
+    p5_state.bind.vertex_buffers[0] = p5_state.vertex_buffer;
 }
 
 // Canvas functions
