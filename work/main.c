@@ -26,8 +26,8 @@ float randfrom(float start, float end)
     return (end - start) * rand() / RAND_MAX - start;
 }
 
-void setup() {
-
+void setup()
+{
     srand(time(NULL));
     
     for (int i = 0; i < BALL_COUNT; i++) {
