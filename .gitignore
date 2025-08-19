@@ -16,5 +16,13 @@ compile_flags.txt
 !/examples/*.html
 !/examples/.gitignore
 
+/work/*
+!/work*/
+!/work/*.c
+!/work/*.html
+!/work/.gitignore
+
 .worktree/
 
+.idea
+/build
