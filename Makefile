@@ -89,7 +89,7 @@ deps/deps.o: deps/deps.c $(DEPS)
 	$(CC) -c $(CFLAGS) -o deps/deps.o deps/deps.c
 
 # Generic rule for building any .c file
-%: %.c deps/deps.o p5.h shader/shape_glsl.h
+%: %.c deps/deps.o p5.h shaders/shape_glsl.h
 	@echo "Building $@ for $(PLATFORM)..."
 	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $< deps/deps.o $(LIBS)
 	@echo "Build complete: $@$(EXE_SUFFIX)"
@@ -126,15 +126,15 @@ demo: src/demo
 p5_style: src/p5_style
 simple: src/simple
 
-work-build: work/main shader/shape_glsl.h
+work-build: work/main shaders/shape_glsl.h
 
 work: work-build
 	@./work/main
 
-shader: shader/shape_glsl.h
+shaders: shaders/shape_glsl.h
 
-shader/shape_glsl.h: shader/shape.glsl
-	sokol-shdc --input shader/shape.glsl --output shader/shape_glsl.h --slang glsl430:hlsl5:metal_macos
+shaders/shape_glsl.h: shaders/shape.glsl
+	sokol-shdc --input shaders/shape.glsl --output shaders/shape_glsl.h --slang glsl430:hlsl5:metal_macos
 
 compile_flags.txt: FORCE
 	@echo "Generating compile_flags.txt for IDE support"

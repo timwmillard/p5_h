@@ -375,7 +375,7 @@ typedef struct {
 } p5_mat4;
 
 // TODO: inline shape_glsl.h
-#include "shader/shape_glsl.h"
+#include "shaders/shape_glsl.h"
 
 typedef enum {
     SHAPE_CIRCLE,
@@ -472,7 +472,7 @@ static void p5_draw_sdf_shape(float x, float y, float w, float h,
     fs_params_t fs_params = {
         .fill_color = *(p5_vec4*)&p5_state.draw.fill_color,
         .stroke_color = *(p5_vec4*)&p5_state.draw.stroke_color,
-        .smoothness = 0.03f,
+        .smoothness = 0.02f,
         // .stroke_width = p5_state.draw.stroke_width / (w * 0.5f), // Normalize stroke width
         .shape_type = shape,
         .corner_radius = corner_radius,
