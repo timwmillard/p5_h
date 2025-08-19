@@ -472,7 +472,8 @@ static void p5_draw_sdf_shape(float x, float y, float w, float h,
     fs_params_t fs_params = {
         .fill_color = *(p5_vec4*)&p5_state.draw.fill_color,
         .stroke_color = *(p5_vec4*)&p5_state.draw.stroke_color,
-        .smoothness = 0.02f,
+        .smoothness = 0.01f,
+        // .stroke_width = p5_state.draw.stroke_width / (w * 0.5f), // Normalize stroke width
         .shape_type = shape,
         .corner_radius = corner_radius,
         .quad_skew = {skew_x, skew_y},
@@ -499,7 +500,6 @@ void p5_sokol_frame(void)
         setup();  // Setup always gets called to redraw its content
     }
     p5_state.in_setup_mode = false;
-
 
     sg_begin_pass(&(sg_pass){
         .action =(sg_pass_action) {
@@ -551,10 +551,10 @@ void p5_init(void) {
     p5_state.draw.transform = (p5_Transform){0.0f, 0.0f, 0.0f, 1.0f, 1.0f};
     p5_state.draw_stack_depth = 0;
     p5_state.canvas.created = false;
-    p5_state.canvas.width = 0;
-    p5_state.canvas.height = 0;
     p5_state.canvas.x = 0;
     p5_state.canvas.y = 0;
+    p5_state.canvas.width = sapp_width();
+    p5_state.canvas.height = sapp_height();
     p5_state.setup_has_drawn = false;  // Initialize p5.js compatibility flag
     p5_state.in_setup_mode = false;    // Not in setup initially
     p5_state.draw.angle_mode = P5_RADIANS;  // Default to radians like p5.js
