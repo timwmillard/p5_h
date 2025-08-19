@@ -421,8 +421,7 @@ typedef struct {
     int draw_stack_depth;
 
     p5_Canvas canvas;
-    bool setup_has_drawn;  // Internal flag for p5.js compatibility  
-    bool in_setup_mode;    // Currently executing setup() - for p5.js compatibility
+    bool setup_called; // setup() function has been called, only run once.
     float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
     
     sg_pipeline pip;
@@ -448,8 +447,6 @@ void p5_sokol_init(void) {
     });
     
     p5_init();
-
-
 }
 
 void init_shape_pipeline()
@@ -489,18 +486,10 @@ void p5_circle(float x, float y, float diameter)
 
 void p5_sokol_frame(void)
 {
-    // P5.js compatibility: Execute setup() drawing commands every frame
-    // This simulates canvas persistence by redrawing setup() content each frame
-    p5_state.in_setup_mode = true;
-    if (!p5_state.setup_has_drawn) {
+    if (!p5_state.setup_called) {
         setup();  // Call user setup - this will draw every frame now
-        p5_state.setup_has_drawn = true;
-    } else {
-        // Re-execute setup() drawing commands to maintain image persistence
-        setup();  // Setup always gets called to redraw its content
-    }
-    p5_state.in_setup_mode = false;
-
+        p5_state.setup_called = true;
+    } 
     sg_begin_pass(&(sg_pass){
         .action =(sg_pass_action) {
             .colors[0] = { 
@@ -555,8 +544,7 @@ void p5_init(void) {
     p5_state.canvas.y = 0;
     p5_state.canvas.width = sapp_width();
     p5_state.canvas.height = sapp_height();
-    p5_state.setup_has_drawn = false;  // Initialize p5.js compatibility flag
-    p5_state.in_setup_mode = false;    // Not in setup initially
+    p5_state.setup_called = false;  // Initialize p5.js compatibility flag
     p5_state.draw.angle_mode = P5_RADIANS;  // Default to radians like p5.js
     p5_state.draw.color_mode = P5_RGB;      // Default to RGB
     p5_state.color_maxes[0] = 255.0f;  // R max
