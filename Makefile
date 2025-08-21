@@ -134,7 +134,7 @@ work: work-build
 shaders: shaders/shape_glsl.h
 
 shaders/shape_glsl.h: shaders/shape.glsl
-	sokol-shdc --input shaders/shape.glsl --output shaders/shape_glsl.h --slang glsl430:hlsl5:metal_macos
+	sokol-shdc --input shaders/shape.glsl --output shaders/shape_glsl.h --slang glsl430:hlsl5:metal_macos:glsl300es
 
 compile_flags.txt: FORCE
 	@echo "Generating compile_flags.txt for IDE support"

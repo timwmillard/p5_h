@@ -8,7 +8,13 @@ include_directories(.)
 include_directories(deps)
 
 # Platform-specific configuration
-if(APPLE)
+if(EMSCRIPTEN)
+    # Web/Emscripten configuration
+    set(BACKEND -DSOKOL_GLES3)
+    set(PLATFORM_LIBS "")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_WEBGL2=1 -s FULL_ES3=1 -s ASSERTIONS=1")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s ASSERTIONS=1 --shell-file ${CMAKE_SOURCE_DIR}/scripts/shell.html")
+elseif(APPLE)
     set(BACKEND -DSOKOL_METAL)
     set(PLATFORM_LIBS "-framework Cocoa" "-framework QuartzCore" "-framework Metal" "-framework MetalKit")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ObjC")
@@ -40,3 +46,16 @@ add_executable(balls work/balls.c deps/deps.c)
 
 # Link libraries
 target_link_libraries(balls ${PLATFORM_LIBS})
+
+# Web-specific targets
+if(EMSCRIPTEN)
+    # Set file extensions for web builds
+    set_target_properties(main PROPERTIES SUFFIX ".html")
+    set_target_properties(balls PROPERTIES SUFFIX ".html")
+    
+    # Additional web build options
+    set_target_properties(main PROPERTIES 
+        LINK_FLAGS "-s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s ASSERTIONS=1 --shell-file ${CMAKE_SOURCE_DIR}/scripts/shell.html")
+    set_target_properties(balls PROPERTIES 
+        LINK_FLAGS "-s USE_WEBGL2=1 -s FULL_ES3=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s ASSERTIONS=1 --shell-file ${CMAKE_SOURCE_DIR}/scripts/shell.html")
+endif()
