@@ -34,3 +34,9 @@ add_executable(main work/main.c deps/deps.c)
 
 # Link libraries
 target_link_libraries(main ${PLATFORM_LIBS})
+
+# Create executable
+add_executable(balls work/balls.c deps/deps.c)
+
+# Link libraries
+target_link_libraries(balls ${PLATFORM_LIBS})

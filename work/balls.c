@@ -21,7 +21,7 @@ typedef struct {
 #define BALL_COUNT 20
 Ball balls[BALL_COUNT];
 
-float randfrom(float start, float end)
+float randfrom(const float start, const float end)
 {
     return (end - start) * rand() / RAND_MAX - start;
 }
@@ -29,27 +29,18 @@ float randfrom(float start, float end)
 void setup()
 {
     srand(time(NULL));
+    
     for (int i = 0; i < BALL_COUNT; i++) {
-        balls[i].x = randfrom(0, width());
-        balls[i].y = randfrom(0, height());
-        balls[i].dx = randfrom(0.9, 20);
-        balls[i].dy = randfrom(0.9, 20);
-        balls[i].size = randfrom(50, 90);
+        balls[i].x = randfrom(0, (float) width());
+        balls[i].y = randfrom(0, (float) height());
+        balls[i].dx = randfrom(0.9f, 20);
+        balls[i].dy = randfrom(0.9f, 20);
+        balls[i].size = (int) randfrom(50.0f, 90.0f);
         balls[i].color.r = randfrom(0, 255);
         balls[i].color.g = randfrom(0, 255);
         balls[i].color.b = randfrom(0, 255);
 
     }
-}
-
-void draw_ball(Ball *ball) {
-    fill_rgba(ball->color.r, ball->color.g, ball->color.b, 100);
-    circle(ball->x, ball->y, ball->size);
-    ball->x += ball->dx;
-    ball->y += ball->dy;
-
-    if (ball->x < 0 || ball->x > width()) ball->dx *= -1;
-    if (ball->y < 0 || ball->y > height())  ball->dy *= -1;
 }
 
 void draw()
@@ -58,10 +49,15 @@ void draw()
     // fill(COLOR("#157ed4"));
 
     for (int i = 0; i < BALL_COUNT; i++) {
-        Ball *ball = &balls[i];
-        draw_ball(ball);
+        fill_rgba(balls[i].color.r, balls[i].color.g, balls[i].color.b, 100);
+        circle(balls[i].x, balls[i].y, balls[i].size);
+        balls[i].x += balls[i].dx;
+        balls[i].y += balls[i].dy;
+
+        if (balls[i].x < 0 || balls[i].x > width()) balls[i].dx *= -1;
+        if (balls[i].y < 0 || balls[i].y > height())  balls[i].dy *= -1;
     }
 }
 
-P5_MAIN(600, 400, "p5 Demo");
+P5_MAIN(600, 400, "Balls");
 
