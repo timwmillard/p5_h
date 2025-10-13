@@ -18,7 +18,7 @@ typedef struct {
     Color color;
 } Ball;
 
-#define BALL_COUNT 20
+#define BALL_COUNT 50
 Ball balls[BALL_COUNT];
 
 float randfrom(const float start, const float end)

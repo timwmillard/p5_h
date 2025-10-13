@@ -177,7 +177,7 @@ p5_Vector2 p5_vector2_add(p5_Vector2 vec1, p5_Vector2 vec2);
 //
 
 void p5_create_canvas(int width, int height);
-void p5_create_canvas_positioned(int width, int height, int x, int y);
+void p5_create_canvas_pos(int width, int height, int x, int y);
 int p5_width(void);
 int p5_height(void);
 int p5_window_width(void);
@@ -278,7 +278,7 @@ typedef p5_ArcMode ArcMode;
 
 // Canvas functions
 static inline void createCanvas(int width, int height) { p5_create_canvas(width, height); }
-static inline void createCanvasPositioned(int width, int height, int x, int y) { p5_create_canvas_positioned(width, height, x, y); }
+static inline void createCanvas_pos(int width, int height, int x, int y) { p5_create_canvas_pos(width, height, x, y); }
 static inline int width(void) { return p5_width(); }
 static inline int height(void) { return p5_height(); }
 static inline int windowWidth(void) { return p5_window_width(); }
@@ -462,7 +462,8 @@ static void p5_draw_sdf_shape(float x, float y, float w, float h,
     vs_params_t vs_params = {
         .position = {x, y},
         .size = {w * 0.5f, h * 0.5f},
-        .screen_size = {p5_state.canvas.width, p5_state.canvas.height},
+        // .screen_size = {p5_state.canvas.width, p5_state.canvas.height},
+        .screen_size = {p5_width(), p5_height()},
     };
     sg_apply_uniforms(UB_vs_params, &SG_RANGE(vs_params));
 
@@ -588,10 +589,10 @@ void p5_create_canvas(int w, int h) {
     int win_h = sapp_height();
     int x = (win_w - w) / 2;
     int y = (win_h - h) / 2;
-    p5_create_canvas_positioned(w, h, x, y);
+    p5_create_canvas_pos(w, h, x, y);
 }
 
-void p5_create_canvas_positioned(int w, int h, int x, int y) {
+void p5_create_canvas_pos(int w, int h, int x, int y) {
     // P5.js compatibility: only create canvas once (idempotent)
     if (p5_state.canvas.created) return;
     

@@ -25,4 +25,8 @@ compile_flags.txt
 .worktree/
 
 .idea
+
 /build
+/cmake-build-debug
+/build_web
+
