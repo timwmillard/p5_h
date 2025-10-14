@@ -105,7 +105,11 @@
             sp5_shutdown()
  */
 
-// #include "p5.h"
+#if 0
+#include "sokol_app.h"
+#include "sokol_gfx.h"
+#include "p5.h"
+#endif
 
 #if !defined(SOKOL_P5_NO_SOKOL_APP) && !defined(SOKOL_APP_INCLUDED)
 #error "Please include sokol_app.h before sokol_p5.h (or define SOKOL_P5_NO_SOKOL_APP)"
@@ -215,24 +219,24 @@ void sp5_handle_event(const sapp_event* ev) {
 }
 
 void sp5_new_frame() {
-    sp5_set_layout_dimensions((p5_Dimensions){ (float)sapp_width(), (float)sapp_height() },
-                                sapp_dpi_scale());
-    p5_SetPointerState(_sp5.mouse_pos, _sp5.mouse_down);
-    p5_UpdateScrollContainers(true, _sp5.scroll, sapp_frame_duration());
-    _sp5.scroll = (p5_Vector2){0, 0};
+    // sp5_set_layout_dimensions((p5_Dimensions){ (float)sapp_width(), (float)sapp_height() },
+    //                             sapp_dpi_scale());
+    // p5_SetPointerState(_sp5.mouse_pos, _sp5.mouse_down);
+    // p5_UpdateScrollContainers(true, _sp5.scroll, sapp_frame_duration());
+    // _sp5.scroll = (p5_Vector2){0, 0};
 }
 #endif  /* SOKOL_P5_NO_SOKOL_APP */
 
-void sp5_set_layout_dimensions(p5_Dimensions size, float dpi_scale) {
-    size.width /= dpi_scale;
-    size.height /= dpi_scale;
-    _sp5.size = size;
-    if(_sp5.dpi_scale != dpi_scale){
-        _sp5.dpi_scale = dpi_scale;
-        p5_ResetMeasureTextCache();
-    }
-    p5_SetLayoutDimensions(size);
-}
+// void sp5_set_layout_dimensions(p5_Dimensions size, float dpi_scale) {
+//     size.width /= dpi_scale;
+//     size.height /= dpi_scale;
+//     _sp5.size = size;
+//     if(_sp5.dpi_scale != dpi_scale){
+//         _sp5.dpi_scale = dpi_scale;
+//         p5_ResetMeasureTextCache();
+//     }
+//     p5_SetLayoutDimensions(size);
+// }
 
 sp5_font_t sp5_add_font(const char *filename) {
     //TODO log something if we get FONS_INVALID
@@ -254,7 +258,7 @@ p5_Dimensions sp5_measure_text(p5_StringSlice text, p5_TextElementConfig *config
     float ascent, descent, lineh;
     fonsVertMetrics(_sp5.fonts, &ascent, &descent, &lineh);
     return (p5_Dimensions) {
-        .width = fonsTextBounds(_sp5.fonts, 0, 0, text.chars, text.chars + text.length, NULL) / _sp5.dpi_scale,
+        .width = fonsTextBounds(_sp5.fonts, 0, 0, text.items, text.items + text.count, NULL) / _sp5.dpi_scale,
         .height = (ascent - descent) / _sp5.dpi_scale
     };
 }
@@ -332,8 +336,9 @@ void sp5_render(p5_RenderCommandArray renderCommands, sp5_font_t *fonts) {
     sgl_disable_texture();
     sgl_push_pipeline();
     sgl_load_pipeline(_sp5.pip);
-    for (int32_t i = 0; i < renderCommands.length; i++) {
-        p5_RenderCommand *renderCommand = p5_RenderCommandArray_Get(&renderCommands, i);
+    for (int32_t i = 0; i < renderCommands.count; i++) {
+        // p5_RenderCommand *renderCommand = p5_RenderCommandArray_Get(&renderCommands, i);
+        p5_RenderCommand *renderCommand = &renderCommands.items[i];
         p5_BoundingBox bbox = renderCommand->boundingBox;
         switch (renderCommand->commandType) {
             case P5_RENDER_COMMAND_TYPE_RECTANGLE: {
@@ -348,14 +353,14 @@ void sp5_render(p5_RenderCommandArray renderCommands, sp5_font_t *fonts) {
                     _draw_corner(bbox.x, bbox.y, -r.topLeft, -r.topLeft);
                     _draw_corner(bbox.x+bbox.width, bbox.y, r.topRight, -r.topRight);
                     _draw_rect(bbox.x+r.topLeft, bbox.y,
-                               bbox.width-r.topLeft-r.topRight, P5__MAX(r.topLeft, r.topRight));
+                               bbox.width-r.topLeft-r.topRight, P5_MAX(r.topLeft, r.topRight));
                 }
                 if(r.bottomLeft > 0 || r.bottomRight > 0){
                     _draw_corner(bbox.x, bbox.y+bbox.height, -r.bottomLeft, r.bottomLeft);
                     _draw_corner(bbox.x+bbox.width, bbox.y+bbox.height, r.bottomRight, r.bottomRight);
                     _draw_rect(bbox.x+r.bottomLeft,
-                               bbox.y+bbox.height-P5__MAX(r.bottomLeft, r.bottomRight),
-                               bbox.width-r.bottomLeft-r.bottomRight, P5__MAX(r.bottomLeft, r.bottomRight));
+                               bbox.y+bbox.height-P5_MAX(r.bottomLeft, r.bottomRight),
+                               bbox.width-r.bottomLeft-r.bottomRight, P5_MAX(r.bottomLeft, r.bottomRight));
                 }
                 if(r.topLeft < r.bottomLeft){
                     if(r.topLeft < r.topRight){
@@ -395,10 +400,10 @@ void sp5_render(p5_RenderCommandArray renderCommands, sp5_font_t *fonts) {
                                    r.topRight, bbox.height-r.topRight-r.bottomRight);
                     }
                 }
-                _draw_rect(bbox.x+P5__MAX(r.topLeft, r.bottomLeft),
-                           bbox.y+P5__MAX(r.topLeft, r.topRight),
-                           bbox.width-P5__MAX(r.topLeft, r.bottomLeft)-P5__MAX(r.topRight, r.bottomRight),
-                           bbox.height-P5__MAX(r.topLeft, r.topRight)-P5__MAX(r.bottomLeft, r.bottomRight));
+                _draw_rect(bbox.x+P5_MAX(r.topLeft, r.bottomLeft),
+                           bbox.y+P5_MAX(r.topLeft, r.topRight),
+                           bbox.width-P5_MAX(r.topLeft, r.bottomLeft)-P5_MAX(r.topRight, r.bottomRight),
+                           bbox.height-P5_MAX(r.topLeft, r.topRight)-P5_MAX(r.bottomLeft, r.bottomRight));
                 sgl_end();
                 break;
             }
@@ -420,7 +425,7 @@ void sp5_render(p5_RenderCommandArray renderCommands, sp5_font_t *fonts) {
                 sgl_push_matrix();
                 sgl_scale(1.0f/_sp5.dpi_scale, 1.0f/_sp5.dpi_scale, 1.0f);
                 fonsDrawText(_sp5.fonts, bbox.x*_sp5.dpi_scale, bbox.y*_sp5.dpi_scale,
-                             text.chars, text.chars + text.length);
+                             text.items, text.items + text.count);
                 sgl_pop_matrix();
                 break;
             }
@@ -470,16 +475,16 @@ void sp5_render(p5_RenderCommandArray renderCommands, sp5_font_t *fonts) {
                     _draw_corner_textured(bbox.x, bbox.y, -r.topLeft, -r.topLeft, bbox.x, bbox.y, bbox.width, bbox.height, u0, v0, u1, v1);
                     _draw_corner_textured(bbox.x+bbox.width, bbox.y, r.topRight, -r.topRight, bbox.x, bbox.y, bbox.width, bbox.height, u0, v0, u1, v1);
                     _draw_rect_textured(bbox.x+r.topLeft, bbox.y,
-                               bbox.width-r.topLeft-r.topRight, P5__MAX(r.topLeft, r.topRight),
-                               u0 + (r.topLeft/bbox.width)*(u1-u0), v0, u1 - (r.topRight/bbox.width)*(u1-u0), v0 + (P5__MAX(r.topLeft, r.topRight)/bbox.height)*(v1-v0));
+                               bbox.width-r.topLeft-r.topRight, P5_MAX(r.topLeft, r.topRight),
+                               u0 + (r.topLeft/bbox.width)*(u1-u0), v0, u1 - (r.topRight/bbox.width)*(u1-u0), v0 + (P5_MAX(r.topLeft, r.topRight)/bbox.height)*(v1-v0));
                 }
                 if(r.bottomLeft > 0 || r.bottomRight > 0){
                     _draw_corner_textured(bbox.x, bbox.y+bbox.height, -r.bottomLeft, r.bottomLeft, bbox.x, bbox.y, bbox.width, bbox.height, u0, v0, u1, v1);
                     _draw_corner_textured(bbox.x+bbox.width, bbox.y+bbox.height, r.bottomRight, r.bottomRight, bbox.x, bbox.y, bbox.width, bbox.height, u0, v0, u1, v1);
                     _draw_rect_textured(bbox.x+r.bottomLeft,
-                               bbox.y+bbox.height-P5__MAX(r.bottomLeft, r.bottomRight),
-                               bbox.width-r.bottomLeft-r.bottomRight, P5__MAX(r.bottomLeft, r.bottomRight),
-                               u0 + (r.bottomLeft/bbox.width)*(u1-u0), v1 - (P5__MAX(r.bottomLeft, r.bottomRight)/bbox.height)*(v1-v0), u1 - (r.bottomRight/bbox.width)*(u1-u0), v1);
+                               bbox.y+bbox.height-P5_MAX(r.bottomLeft, r.bottomRight),
+                               bbox.width-r.bottomLeft-r.bottomRight, P5_MAX(r.bottomLeft, r.bottomRight),
+                               u0 + (r.bottomLeft/bbox.width)*(u1-u0), v1 - (P5_MAX(r.bottomLeft, r.bottomRight)/bbox.height)*(v1-v0), u1 - (r.bottomRight/bbox.width)*(u1-u0), v1);
                 }
                 if(r.topLeft < r.bottomLeft){
                     if(r.topLeft < r.topRight){
@@ -531,12 +536,12 @@ void sp5_render(p5_RenderCommandArray renderCommands, sp5_font_t *fonts) {
                                    u1 - (r.topRight/bbox.width)*(u1-u0), v0 + (r.topRight/bbox.height)*(v1-v0), u1, v1 - (r.bottomRight/bbox.height)*(v1-v0));
                     }
                 }
-                _draw_rect_textured(bbox.x+P5__MAX(r.topLeft, r.bottomLeft),
-                           bbox.y+P5__MAX(r.topLeft, r.topRight),
-                           bbox.width-P5__MAX(r.topLeft, r.bottomLeft)-P5__MAX(r.topRight, r.bottomRight),
-                           bbox.height-P5__MAX(r.topLeft, r.topRight)-P5__MAX(r.bottomLeft, r.bottomRight),
-                           u0+P5__MAX(r.topLeft,r.bottomLeft)/bbox.width*(u1-u0), v0+P5__MAX(r.topLeft,r.topRight)/bbox.height*(v1-v0),
-                           u1-P5__MAX(r.topRight,r.bottomRight)/bbox.width*(u1-u0), v1-P5__MAX(r.bottomLeft,r.bottomRight)/bbox.height*(v1-v0));
+                _draw_rect_textured(bbox.x+P5_MAX(r.topLeft, r.bottomLeft),
+                           bbox.y+P5_MAX(r.topLeft, r.topRight),
+                           bbox.width-P5_MAX(r.topLeft, r.bottomLeft)-P5_MAX(r.topRight, r.bottomRight),
+                           bbox.height-P5_MAX(r.topLeft, r.topRight)-P5_MAX(r.bottomLeft, r.bottomRight),
+                           u0+P5_MAX(r.topLeft,r.bottomLeft)/bbox.width*(u1-u0), v0+P5_MAX(r.topLeft,r.topRight)/bbox.height*(v1-v0),
+                           u1-P5_MAX(r.topRight,r.bottomRight)/bbox.width*(u1-u0), v1-P5_MAX(r.bottomLeft,r.bottomRight)/bbox.height*(v1-v0));
                 sgl_end();
                 sgl_disable_texture();
                 break;

@@ -3,7 +3,7 @@ UNAME_S := $(shell uname -s)
 
 # Common compiler flags
 CFLAGS = -std=c99 -Wall -Wextra -O2
-INCLUDES =  -I. -Ideps
+INCLUDES =  -I. -Ideps -I.. -I../renderers
 
 # Platform-specific configuration
 ifeq ($(UNAME_S), Linux)
@@ -83,4 +83,12 @@ sokol:
 open-simplex-noise:
 	wget -O deps/open-simplex-noise.c https://raw.githubusercontent.com/smcameron/open-simplex-noise-in-c/refs/heads/master/open-simplex-noise.c
 	wget -O deps/open-simplex-noise.h https://raw.githubusercontent.com/smcameron/open-simplex-noise-in-c/refs/heads/master/open-simplex-noise.h
+
+
+# Compile Flags
+compile_flags.txt: FORCE
+	@echo "Generating compile_flags.txt for IDE support"
+	@echo $(CFLAGS) | tr ' ' '\n' > $@
+
+FORCE:
 

@@ -16,7 +16,7 @@ enum {
 };
 
 static char *font_files[] = {
-    [FONT_DROID_SANS] = "resources/fonts/DroidSans.ttf",
+    [FONT_DROID_SANS] = "fonts/DroidSans.ttf",
 };
 
 static struct {
@@ -31,11 +31,8 @@ void frame()
         .swapchain = sglue_swapchain(),
     });
 
-    // Clay_BeginLayout();
-    // ui_container();
-    // // CornerRadiusTest();
+    // call p5 render_commands
     p5_RenderCommandArray clay_commands = {0};
-    // = Clay_EndLayout();
 
     sgl_matrix_mode_modelview();
     sgl_load_identity();

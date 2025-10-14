@@ -124,6 +124,9 @@ typedef enum {
 #define HALF_PI (PI * 0.5f)
 #endif
 
+#define P5_MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define P5_MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 // Vector functions
 char *p5_vector2_to_string(p5_Vector2 vec);
 void p5_vector2_set(p5_Vector2 *vec, float x, float y);
@@ -190,6 +193,9 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
 #define OPEN P5_OPEN
 #define CHORD P5_CHORD
 #define PIE P5_PIE
+
+#define max P5_MAX
+#define min P5_MIN
 
 // should this be decricated for color
 #define COLOR p5_color
@@ -353,7 +359,11 @@ p5_da_foreach(int, x, &xs) {
 
 /*** Renderer Commands ***/
 
-typedef char* p5_StringSlice;
+typedef struct {
+    char *items;
+    size_t count;
+    size_t capacity;
+} p5_StringSlice;
 
 typedef struct p5_CornerRadius {
     float topLeft;
@@ -511,9 +521,9 @@ typedef struct p5_RenderCommandList {
     // The underlying max capacity of the array, not necessarily all initialized.
     int32_t capacity;
     // The number of initialized elements in this array. Used for loops and iteration.
-    int32_t length;
+    int32_t count;
     // A pointer to the first element in the internal array.
-    p5_RenderCommand* internalArray;
+    p5_RenderCommand* items;
 } p5_RenderCommandArray;
 
 
