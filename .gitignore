@@ -30,3 +30,5 @@ compile_flags.txt
 /cmake-build-debug
 /build_web
 
+/sokol_demo/demo
+

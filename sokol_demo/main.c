@@ -32,7 +32,7 @@ void frame()
     });
 
     // call p5 render_commands
-    p5_RenderCommandArray clay_commands = {0};
+    p5_RenderCommandArray clay_commands = p5_render_commands();
 
     sgl_matrix_mode_modelview();
     sgl_load_identity();

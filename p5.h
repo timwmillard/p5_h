@@ -578,9 +578,71 @@ typedef struct p5_Dimensions {
     float width, height;
 } p5_Dimensions;
 
+/*** Global State ***/
+
+// Transform state (internal)
+typedef struct {
+    float tx, ty;     // translation
+    float rot;        // rotation
+    float sx, sy;     // scale
+} p5_Transform;
+
+// Canvas state (internal)
+typedef struct {
+    int width, height;    // Canvas dimensions
+    int x, y;            // Canvas position within window
+    bool created;        // Whether canvas has been created
+} p5_Canvas;
+
+// Drawing state (internal)
+typedef struct {
+    p5_Color fill_color;
+    p5_Color stroke_color;
+
+    bool has_fill;
+    bool has_stroke;
+    float stroke_width;
+    p5_AngleMode angle_mode;
+    p5_ColorMode color_mode;
+    p5_ArcMode arc_mode;
+
+    p5_Transform transform;
+
+} p5_Draw;
+
+static struct {
+    p5_Color background_color;
+
+    p5_Draw draw;
+    p5_Draw draw_stack[32];
+    int draw_stack_depth;
+
+    p5_Canvas canvas;
+    bool setup_called; // setup() function has been called, only run once.
+    float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
+    
+    p5_RenderCommandArray commands;
+
+    p5_RenderCommandArray commands_stack[32];
+    int commands_stack_depth;
+} p5_state;
+
+p5_RenderCommandArray p5_render_commands()
+{
+    return p5_state.commands;
+}
+
 #endif // P5_H
 
 
+// ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██
+// ██ ████  ████ ██   ██ ██      ██      ████  ████ ██      ████   ██    ██    ██   ██    ██    ██ ██    ██ ████   ██
+// ██ ██ ████ ██ ██████  ██      █████   ██ ████ ██ █████   ██ ██  ██    ██    ███████    ██    ██ ██    ██ ██ ██  ██
+// ██ ██  ██  ██ ██      ██      ██      ██  ██  ██ ██      ██  ██ ██    ██    ██   ██    ██    ██ ██    ██ ██  ██ ██
+// ██ ██      ██ ██      ███████ ███████ ██      ██ ███████ ██   ████    ██    ██   ██    ██    ██  ██████  ██   ████
+//
+// >>implementation
+//
 #ifdef P5_IMPLEMENTATION
 
 // Color functions
