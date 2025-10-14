@@ -249,6 +249,110 @@ static inline void arc_with_mode(float x, float y, float w, float h, float start
 
 #endif // P5_NO_SHORT_NAMES
 
+/*** Dyanmic Array (List) ***/
+// Credit: nob.h
+
+#ifndef P5_ASSERT
+#include <assert.h>
+#define P5_ASSERT assert
+#endif /* P5_ASSERT */
+
+#ifndef P5_REALLOC
+#include <stdlib.h>
+#define P5_REALLOC reallocf
+#endif /* P5_REALLOC */
+
+#ifndef P5_FREE
+#include <stdlib.h>
+#define P5_FREE free
+#endif /* P5_FREE */
+
+#define P5_ARRAY_LEN(array) (sizeof(array)/sizeof(array[0]))
+#define P5_ARRAY_GET(array, index) \
+    (P5_ASSERT((size_t)index < P5_ARRAY_LEN(array)), array[(size_t)index])
+
+// Initial capacity of a dynamic array
+#ifndef P5_DA_INIT_CAP
+#define P5_DA_INIT_CAP 256
+#endif
+
+#ifdef __cplusplus
+#define P5_DECLTYPE_CAST(T) (decltype(T))
+#else
+#define P5_DECLTYPE_CAST(T)
+#endif // __cplusplus
+
+#define p5_da_reserve(da, expected_capacity)                                              \
+    do {                                                                                   \
+        if ((expected_capacity) > (da)->capacity) {                                        \
+            if ((da)->capacity == 0) {                                                     \
+                (da)->capacity = P5_DA_INIT_CAP;                                          \
+            }                                                                              \
+            while ((expected_capacity) > (da)->capacity) {                                 \
+                (da)->capacity *= 2;                                                       \
+            }                                                                              \
+            (da)->items = P5_DECLTYPE_CAST((da)->items)P5_REALLOC((da)->items, (da)->capacity * sizeof(*(da)->items)); \
+            P5_ASSERT((da)->items != NULL && "Buy more RAM lol");                         \
+        }                                                                                  \
+    } while (0)
+
+// Append an item to a dynamic array
+#define p5_da_append(da, item)                \
+    do {                                       \
+        p5_da_reserve((da), (da)->count + 1); \
+        (da)->items[(da)->count++] = (item);   \
+    } while (0)
+
+#define p5_da_free(da) P5_FREE((da).items)
+
+// Append several items to a dynamic array
+#define p5_da_append_many(da, new_items, new_items_count)                                      \
+    do {                                                                                        \
+        p5_da_reserve((da), (da)->count + (new_items_count));                                  \
+        memcpy((da)->items + (da)->count, (new_items), (new_items_count)*sizeof(*(da)->items)); \
+        (da)->count += (new_items_count);                                                       \
+    } while (0)
+
+#define p5_da_resize(da, new_size)     \
+    do {                                \
+        p5_da_reserve((da), new_size); \
+        (da)->count = (new_size);       \
+    } while (0)
+
+#define p5_da_last(da) (da)->items[(P5_ASSERT((da)->count > 0), (da)->count-1)]
+#define p5_da_remove_unordered(da, i)               \
+    do {                                             \
+        size_t j = (i);                              \
+        P5_ASSERT(j < (da)->count);                 \
+        (da)->items[j] = (da)->items[--(da)->count]; \
+    } while(0)
+
+/*
+Foreach over Dynamic Arrays. Example:
+
+typedef struct {
+    int *items;
+    size_t count;
+    size_t capacity;
+} Numbers;
+
+Numbers xs = {0};
+
+p5_da_append(&xs, 69);
+p5_da_append(&xs, 420);
+p5_da_append(&xs, 1337);
+
+p5_da_foreach(int, x, &xs) {
+    // `x` here is a pointer to the current element. You can get its index by taking a difference
+    // between `x` and the start of the array which is `x.items`.
+    size_t index = x - xs.items;
+    p5_log(INFO, "%zu: %d", index, *x);
+}
+*/
+#define p5_da_foreach(Type, it, da) for (Type *it = (da)->items; it < (da)->items + (da)->count; ++it)
+
+/*** Renderer Commands ***/
+
 typedef char* p5_StringSlice;
 
 typedef struct p5_CornerRadius {
@@ -270,7 +374,7 @@ typedef struct p5_BorderWidth {
     uint16_t betweenChildren;
 } p5_BorderWidth;
 
-// Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_TEXT
+// Render command data when commandType == P5_RENDER_COMMAND_TYPE_TEXT
 typedef struct p5_TextRenderData {
     // A string slice containing the text to be rendered.
     // Note: this is not guaranteed to be null terminated.
@@ -286,7 +390,7 @@ typedef struct p5_TextRenderData {
     uint16_t lineHeight;
 } p5_TextRenderData;
 
-// Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_RECTANGLE
+// Render command data when commandType == P5_RENDER_COMMAND_TYPE_RECTANGLE
 typedef struct p5_RectangleRenderData {
     // The solid background color to fill this rectangle with. Conventionally represented as 0-255 for each channel, but interpretation is up to the renderer.
     p5_Color backgroundColor;
@@ -295,7 +399,7 @@ typedef struct p5_RectangleRenderData {
     p5_CornerRadius cornerRadius;
 } p5_RectangleRenderData;
 
-// Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_IMAGE
+// Render command data when commandType == P5_RENDER_COMMAND_TYPE_IMAGE
 typedef struct p5_ImageRenderData {
     // The tint color for this image. Note that the default value is 0,0,0,0 and should likely be interpreted
     // as "untinted".
@@ -308,7 +412,7 @@ typedef struct p5_ImageRenderData {
     void* imageData;
 } p5_ImageRenderData;
 
-// Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_CUSTOM
+// Render command data when commandType == P5_RENDER_COMMAND_TYPE_CUSTOM
 typedef struct p5_CustomRenderData {
     // Passed through from .backgroundColor in the original element declaration.
     // Conventionally represented as 0-255 for each channel, but interpretation is up to the renderer.
@@ -320,13 +424,13 @@ typedef struct p5_CustomRenderData {
     void* customData;
 } p5_CustomRenderData;
 
-// Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_SCISSOR_START || commandType == CLAY_RENDER_COMMAND_TYPE_SCISSOR_END
+// Render command data when commandType == P5_RENDER_COMMAND_TYPE_SCISSOR_START || commandType == P5_RENDER_COMMAND_TYPE_SCISSOR_END
 typedef struct p5_ScrollRenderData {
     bool horizontal;
     bool vertical;
 } p5_ClipRenderData;
 
-// Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_BORDER
+// Render command data when commandType == P5_RENDER_COMMAND_TYPE_BORDER
 typedef struct p5_BorderRenderData {
     // Controls a shared color for all this element's borders.
     // Conventionally represented as 0-255 for each channel, but interpretation is up to the renderer.
@@ -340,17 +444,17 @@ typedef struct p5_BorderRenderData {
 
 // A struct union containing data specific to this command's .commandType
 typedef union p5_RenderData {
-    // Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_RECTANGLE
+    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_RECTANGLE
     p5_RectangleRenderData rectangle;
-    // Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_TEXT
+    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_TEXT
     p5_TextRenderData text;
-    // Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_IMAGE
+    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_IMAGE
     p5_ImageRenderData image;
-    // Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_CUSTOM
+    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_CUSTOM
     p5_CustomRenderData custom;
-    // Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_BORDER
+    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_BORDER
     p5_BorderRenderData border;
-    // Render command data when commandType == CLAY_RENDER_COMMAND_TYPE_SCISSOR_START|END
+    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_SCISSOR_START|END
     p5_ClipRenderData clip;
 } p5_RenderData;
 
@@ -403,14 +507,66 @@ typedef struct p5_RenderCommand {
 } p5_RenderCommand;
 
 // A sized array of render commands.
-typedef struct Clay_RenderCommandArray {
+typedef struct p5_RenderCommandList {
     // The underlying max capacity of the array, not necessarily all initialized.
     int32_t capacity;
     // The number of initialized elements in this array. Used for loops and iteration.
     int32_t length;
     // A pointer to the first element in the internal array.
-    Clay_RenderCommand* internalArray;
-} Clay_RenderCommandArray;
+    p5_RenderCommand* internalArray;
+} p5_RenderCommandArray;
+
+
+// Controls how text "wraps", that is how it is broken into multiple lines when there is insufficient horizontal space.
+typedef enum {
+    // (default) breaks on whitespace characters.
+    P5_TEXT_WRAP_WORDS,
+    // Don't break on space characters, only on newlines.
+    P5_TEXT_WRAP_NEWLINES,
+    // Disable text wrapping entirely.
+    P5_TEXT_WRAP_NONE,
+} p5_TextElementConfigWrapMode;
+
+// Controls how wrapped lines of text are horizontally aligned within the outer text bounding box.
+typedef enum {
+    // (default) Horizontally aligns wrapped lines of text to the left hand side of their bounding box.
+    P5_TEXT_ALIGN_LEFT,
+    // Horizontally aligns wrapped lines of text to the center of their bounding box.
+    P5_TEXT_ALIGN_CENTER,
+    // Horizontally aligns wrapped lines of text to the right hand side of their bounding box.
+    P5_TEXT_ALIGN_RIGHT,
+} p5_TextAlignment;
+
+// Controls various functionality related to text elements.
+typedef struct p5_TextElementConfig {
+    // A pointer that will be transparently passed through to the resulting render command.
+    void *userData;
+    // The RGBA color of the font to render, conventionally specified as 0-255.
+    p5_Color textColor;
+    // An integer transparently passed to p5_MeasureText to identify the font to use.
+    // The debug view will pass fontId = 0 for its internal text.
+    uint16_t fontId;
+    // Controls the size of the font. Handled by the function provided to p5_MeasureText.
+    uint16_t fontSize;
+    // Controls extra horizontal spacing between characters. Handled by the function provided to p5_MeasureText.
+    uint16_t letterSpacing;
+    // Controls additional vertical space between wrapped lines of text.
+    uint16_t lineHeight;
+    // Controls how text "wraps", that is how it is broken into multiple lines when there is insufficient horizontal space.
+    // P5_TEXT_WRAP_WORDS (default) breaks on whitespace characters.
+    // P5_TEXT_WRAP_NEWLINES doesn't break on space characters, only on newlines.
+    // P5_TEXT_WRAP_NONE disables wrapping entirely.
+    p5_TextElementConfigWrapMode wrapMode;
+    // Controls how wrapped lines of text are horizontally aligned within the outer text bounding box.
+    // P5_TEXT_ALIGN_LEFT (default) - Horizontally aligns wrapped lines of text to the left hand side of their bounding box.
+    // P5_TEXT_ALIGN_CENTER - Horizontally aligns wrapped lines of text to the center of their bounding box.
+    // P5_TEXT_ALIGN_RIGHT - Horizontally aligns wrapped lines of text to the right hand side of their bounding box.
+    p5_TextAlignment textAlignment;
+} p5_TextElementConfig;
+
+typedef struct p5_Dimensions {
+    float width, height;
+} p5_Dimensions;
 
 #endif // P5_H
 
