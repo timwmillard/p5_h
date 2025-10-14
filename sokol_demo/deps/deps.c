@@ -17,4 +17,3 @@
 #define SOKOL_P5_IMPL
 #include "../../renderers/sokol_p5.h"
 
-
