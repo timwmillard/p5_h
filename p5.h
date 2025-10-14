@@ -1,4 +1,26 @@
 /*
+MIT License
+
+Copyright (c) 2024 Tim Millard
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ *
  * p5.h - Single header C library providing p5.js-like functionality using sokol
  * Version: 0.0.1
  *
@@ -19,5 +41,426 @@
            msg, __func__, __FILE__, __LINE__); \
 } while(0)
 
+
+// App function
+void setup(void);
+void draw(void);
+                     
+// Vector 2 dimension
+typedef struct {
+    float x, y;
+} p5_Vector2;
+
+// Vector 3 dimension
+typedef struct {
+    float x, y, z;
+} p5_Vector3;
+
+// Color structure
+typedef struct {
+    float r, g, b, a;
+} p5_Color;
+
+// Angle mode enumeration
+typedef enum {
+    P5_DEGREES,
+    P5_RADIANS
+} p5_AngleMode;
+
+// Color mode enumeration
+typedef enum {
+    P5_RGB,
+    P5_HSB,
+    P5_HSL
+} p5_ColorMode;
+
+// Arc mode enumeration
+typedef enum {
+    P5_ARC_OPEN,
+    P5_ARC_CHORD,
+    P5_ARC_PIE
+} p5_ArcMode;
+
+// Draw modes
+typedef enum {
+    P5_CORNER = 0,     // x,y is top-left corner
+    P5_CENTER = 1,     // x,y is center
+    P5_RADIUS = 2      // width/height are radius values
+} p5_DrawMode;
+
+// Shape close modes
+typedef enum {
+    P5_SHAPE_OPEN = 0,
+    P5_SHAPE_CLOSE = 1
+} p5_ShapeCloseMode;
+
+// Math constants
+#ifndef PI
+#define PI 3.14159265358979323846f
 #endif
+#ifndef TWO_PI
+#define TWO_PI (2.0f * PI)
+#endif
+#ifndef HALF_PI
+#define HALF_PI (PI * 0.5f)
+#endif
+
+// Vector functions
+char *p5_vector2_to_string(p5_Vector2 vec);
+void p5_vector2_set(p5_Vector2 *vec, float x, float y);
+p5_Vector2 p5_vector2_copy(p5_Vector2 vec);
+p5_Vector2 p5_vector2_add(p5_Vector2 vec1, p5_Vector2 vec2);
+
+// Canvas functions
+void p5_create_canvas(int width, int height);
+void p5_create_canvas_pos(int width, int height, int x, int y);
+int p5_width(void);
+int p5_height(void);
+int p5_window_width(void);
+int p5_window_height(void);
+void p5_background(p5_Color color);
+void p5_background_rgb(unsigned int r, unsigned int g, unsigned int b);
+
+// Color functions
+p5_Color p5_color(const char* color);
+p5_Color p5_color_rgb(unsigned int r, unsigned int g, unsigned int b);
+p5_Color p5_color_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
+void p5_fill(p5_Color color);
+void p5_fill_rgb(unsigned int r, unsigned int g, unsigned int b);
+void p5_fill_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
+void p5_stroke(p5_Color color);
+void p5_stroke_rgb(unsigned int r, unsigned int g, unsigned int b);
+void p5_stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
+void p5_stroke_weight(float weight);
+void p5_no_fill(void);
+void p5_no_stroke(void);
+void p5_angle_mode(p5_AngleMode mode);
+void p5_color_mode(p5_ColorMode mode);
+void p5_color_mode_range(p5_ColorMode mode, float max1, float max2, float max3, float maxA);
+void p5_text_output(void);
+
+// Transform functions
+void p5_push(void);
+void p5_pop(void);
+void p5_translate(float x, float y);
+void p5_rotate(float angle);
+void p5_scale(float sx, float sy);
+void p5_reset_matrix(void);
+
+// Shape functions
+void p5_point(float x, float y);
+void p5_line(float x1, float y1, float x2, float y2);
+void p5_rect(float x, float y, float w, float h);
+void p5_square(float x, float y, float size);
+void p5_circle(float x, float y, float diameter);
+void p5_ellipse(float x, float y, float w, float h);
+void p5_triangle(float x1, float y1, float x2, float y2, float x3, float y3);
+void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
+void p5_arc(float x, float y, float w, float h, float start, float stop);
+void p5_arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_ArcMode mode);
+
+
+/*** Short names ***/
+#ifndef P5_NO_SHORT_NAMES
+
+#define DEGREES P5_DEGREES
+#define RADIANS P5_RADIANS
+#define RGB P5_RGB
+#define HSB P5_HSB
+#define HSL P5_HSL
+#define OPEN P5_OPEN
+#define CHORD P5_CHORD
+#define PIE P5_PIE
+
+// should this be decricated for color
+#define COLOR p5_color
+
+// Type aliases
+typedef p5_Color Color;
+typedef p5_ColorMode ColorMode;
+typedef p5_AngleMode AngleMode;
+typedef p5_ArcMode ArcMode;
+
+// Canvas functions
+static inline void createCanvas(int width, int height) { p5_create_canvas(width, height); }
+static inline void createCanvas_pos(int width, int height, int x, int y) { p5_create_canvas_pos(width, height, x, y); }
+static inline int width(void) { return p5_width(); }
+static inline int height(void) { return p5_height(); }
+static inline int windowWidth(void) { return p5_window_width(); }
+static inline int windowHeight(void) { return p5_window_height(); }
+static inline void background(Color color) { p5_background(color); }
+static inline void background_rgb(unsigned int r, unsigned int g, unsigned int b) { p5_background_rgb(r, g, b); }
+
+// Color functions
+static inline Color color(const char* color_str) { return p5_color(color_str); }
+static inline Color color_rgb(unsigned int r, unsigned int g, unsigned int b) { return p5_color_rgb(r, g, b); }
+static inline Color color_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { return p5_color_rgba(r, g, b, a); }
+static inline void fill(Color color) { p5_fill(color); }
+static inline void fill_rgb(unsigned int r, unsigned int g, unsigned int b) { p5_fill_rgb(r, g, b); }
+static inline void fill_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { p5_fill_rgba(r, g, b, a); }
+static inline void stroke(Color color) { p5_stroke(color); }
+static inline void stroke_rgb(unsigned int r, unsigned int g, unsigned int b) { p5_stroke_rgb(r, g, b); }
+static inline void stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) { p5_stroke_rgba(r, g, b, a); }
+static inline void strokeWeight(float weight) { p5_stroke_weight(weight); }
+static inline void noFill(void) { p5_no_fill(); }
+static inline void noStroke(void) { p5_no_stroke(); }
+static inline void angleMode(AngleMode mode) { p5_angle_mode(mode); }
+static inline void colorMode(ColorMode mode) { p5_color_mode(mode); }
+static inline void textOutput(void) { p5_text_output(); }
+
+// Transform functions
+static inline void push(void) { p5_push(); }
+static inline void pop(void) { p5_pop(); }
+static inline void translate(float x, float y) { p5_translate(x, y); }
+static inline void rotate(float angle) { p5_rotate(angle); }
+static inline void scale(float sx, float sy) { p5_scale(sx, sy); }
+static inline void reset_matrix(void) { p5_reset_matrix(); };
+
+// Shape functions
+static inline void point(float x, float y) { p5_point(x, y); }
+static inline void line(float x1, float y1, float x2, float y2) { p5_line(x1, y1, x2, y2); }
+static inline void rect(float x, float y, float w, float h) { p5_rect(x, y, w, h); }
+static inline void square(float x, float y, float size) { p5_square(x, y, size); }
+static inline void circle(float x, float y, float diameter) { p5_circle(x, y, diameter); }
+static inline void ellipse(float x, float y, float w, float h) { p5_ellipse(x, y, w, h); }
+static inline void triangle(float x1, float y1, float x2, float y2, float x3, float y3) { p5_triangle(x1, y1, x2, y2, x3, y3); }
+static inline void quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) { p5_quad(x1, y1, x2, y2, x3, y3, x4, y4); }
+static inline void arc(float x, float y, float w, float h, float start, float stop) { p5_arc(x, y, w, h, start, stop); }
+static inline void arc_with_mode(float x, float y, float w, float h, float start, float stop, ArcMode mode) { p5_arc_with_mode(x, y, w, h, start, stop, mode); }
+
+#endif // P5_NO_SHORT_NAMES
+
+
+#endif // P5_H
+
+
+#ifdef P5_IMPLEMENTATION
+
+// Helper function to parse hex color strings
+static int p5_hex_char_to_int(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    return 0;
+}
+
+static p5_Color p5_parse_hex_color(const char* hex) {
+    p5_Color color = {0.0f, 0.0f, 0.0f, 1.0f};
+    int len = strlen(hex);
+    
+    if (len == 0 || hex[0] != '#') return color;
+    
+    if (len == 4) { // #RGB
+        int r = p5_hex_char_to_int(hex[1]);
+        int g = p5_hex_char_to_int(hex[2]);
+        int b = p5_hex_char_to_int(hex[3]);
+        color.r = (r * 16 + r) / 255.0f;
+        color.g = (g * 16 + g) / 255.0f;
+        color.b = (b * 16 + b) / 255.0f;
+    } else if (len == 7) { // #RRGGBB
+        int r = p5_hex_char_to_int(hex[1]) * 16 + p5_hex_char_to_int(hex[2]);
+        int g = p5_hex_char_to_int(hex[3]) * 16 + p5_hex_char_to_int(hex[4]);
+        int b = p5_hex_char_to_int(hex[5]) * 16 + p5_hex_char_to_int(hex[6]);
+        color.r = r / 255.0f;
+        color.g = g / 255.0f;
+        color.b = b / 255.0f;
+    } else if (len == 5) { // #RGBA
+        int r = p5_hex_char_to_int(hex[1]);
+        int g = p5_hex_char_to_int(hex[2]);
+        int b = p5_hex_char_to_int(hex[3]);
+        int a = p5_hex_char_to_int(hex[4]);
+        color.r = (r * 16 + r) / 255.0f;
+        color.g = (g * 16 + g) / 255.0f;
+        color.b = (b * 16 + b) / 255.0f;
+        color.a = (a * 16 + a) / 255.0f;
+    } else if (len == 9) { // #RRGGBBAA
+        int r = p5_hex_char_to_int(hex[1]) * 16 + p5_hex_char_to_int(hex[2]);
+        int g = p5_hex_char_to_int(hex[3]) * 16 + p5_hex_char_to_int(hex[4]);
+        int b = p5_hex_char_to_int(hex[5]) * 16 + p5_hex_char_to_int(hex[6]);
+        int a = p5_hex_char_to_int(hex[7]) * 16 + p5_hex_char_to_int(hex[8]);
+        color.r = r / 255.0f;
+        color.g = g / 255.0f;
+        color.b = b / 255.0f;
+        color.a = a / 255.0f;
+    }
+    
+    return color;
+}
+
+// Named color lookup (subset of CSS colors)
+static p5_Color p5_parse_named_color(const char* name) {
+    // Convert to lowercase for case-insensitive comparison
+    char lower_name[32];
+    int i = 0;
+    while (name[i] && i < 31) {
+        lower_name[i] = (name[i] >= 'A' && name[i] <= 'Z') ? name[i] + 32 : name[i];
+        i++;
+    }
+    lower_name[i] = '\0';
+    
+    // Common named colors used in p5.js examples
+    if (strcmp(lower_name, "aliceblue") == 0) return p5_parse_hex_color("#f0f8ff");
+    if (strcmp(lower_name, "antiquewhite") == 0) return p5_parse_hex_color("#faebd7");
+    if (strcmp(lower_name, "aqua") == 0) return p5_parse_hex_color("#00ffff");
+    if (strcmp(lower_name, "aquamarine") == 0) return p5_parse_hex_color("#7fffd4");
+    if (strcmp(lower_name, "azure") == 0) return p5_parse_hex_color("#f0ffff");
+    if (strcmp(lower_name, "beige") == 0) return p5_parse_hex_color("#f5f5dc");
+    if (strcmp(lower_name, "bisque") == 0) return p5_parse_hex_color("#ffe4c4");
+    if (strcmp(lower_name, "black") == 0) return p5_parse_hex_color("#000000");
+    if (strcmp(lower_name, "blanchedalmond") == 0) return p5_parse_hex_color("#ffebcd");
+    if (strcmp(lower_name, "blue") == 0) return p5_parse_hex_color("#0000ff");
+    if (strcmp(lower_name, "blueviolet") == 0) return p5_parse_hex_color("#8a2be2");
+    if (strcmp(lower_name, "brown") == 0) return p5_parse_hex_color("#a52a2a");
+    if (strcmp(lower_name, "burlywood") == 0) return p5_parse_hex_color("#deb887");
+    if (strcmp(lower_name, "cadetblue") == 0) return p5_parse_hex_color("#5f9ea0");
+    if (strcmp(lower_name, "chartreuse") == 0) return p5_parse_hex_color("#7fff00");
+    if (strcmp(lower_name, "chocolate") == 0) return p5_parse_hex_color("#d2691e");
+    if (strcmp(lower_name, "coral") == 0) return p5_parse_hex_color("#ff7f50");
+    if (strcmp(lower_name, "cornflowerblue") == 0) return p5_parse_hex_color("#6495ed");
+    if (strcmp(lower_name, "cornsilk") == 0) return p5_parse_hex_color("#fff8dc");
+    if (strcmp(lower_name, "crimson") == 0) return p5_parse_hex_color("#dc143c");
+    if (strcmp(lower_name, "cyan") == 0) return p5_parse_hex_color("#00ffff");
+    if (strcmp(lower_name, "darkblue") == 0) return p5_parse_hex_color("#00008b");
+    if (strcmp(lower_name, "darkcyan") == 0) return p5_parse_hex_color("#008b8b");
+    if (strcmp(lower_name, "darkgoldenrod") == 0) return p5_parse_hex_color("#b8860b");
+    if (strcmp(lower_name, "darkgray") == 0) return p5_parse_hex_color("#a9a9a9");
+    if (strcmp(lower_name, "darkgrey") == 0) return p5_parse_hex_color("#a9a9a9");
+    if (strcmp(lower_name, "darkgreen") == 0) return p5_parse_hex_color("#006400");
+    if (strcmp(lower_name, "darkkhaki") == 0) return p5_parse_hex_color("#bdb76b");
+    if (strcmp(lower_name, "darkmagenta") == 0) return p5_parse_hex_color("#8b008b");
+    if (strcmp(lower_name, "darkolivegreen") == 0) return p5_parse_hex_color("#556b2f");
+    if (strcmp(lower_name, "darkorange") == 0) return p5_parse_hex_color("#ff8c00");
+    if (strcmp(lower_name, "darkorchid") == 0) return p5_parse_hex_color("#9932cc");
+    if (strcmp(lower_name, "darkred") == 0) return p5_parse_hex_color("#8b0000");
+    if (strcmp(lower_name, "darksalmon") == 0) return p5_parse_hex_color("#e9967a");
+    if (strcmp(lower_name, "darkseagreen") == 0) return p5_parse_hex_color("#8fbc8f");
+    if (strcmp(lower_name, "darkslateblue") == 0) return p5_parse_hex_color("#483d8b");
+    if (strcmp(lower_name, "darkslategray") == 0) return p5_parse_hex_color("#2f4f4f");
+    if (strcmp(lower_name, "darkslategrey") == 0) return p5_parse_hex_color("#2f4f4f");
+    if (strcmp(lower_name, "darkturquoise") == 0) return p5_parse_hex_color("#00ced1");
+    if (strcmp(lower_name, "darkviolet") == 0) return p5_parse_hex_color("#9400d3");
+    if (strcmp(lower_name, "deeppink") == 0) return p5_parse_hex_color("#ff1493");
+    if (strcmp(lower_name, "deepskyblue") == 0) return p5_parse_hex_color("#00bfff");
+    if (strcmp(lower_name, "dimgray") == 0) return p5_parse_hex_color("#696969");
+    if (strcmp(lower_name, "dimgrey") == 0) return p5_parse_hex_color("#696969");
+    if (strcmp(lower_name, "dodgerblue") == 0) return p5_parse_hex_color("#1e90ff");
+    if (strcmp(lower_name, "firebrick") == 0) return p5_parse_hex_color("#b22222");
+    if (strcmp(lower_name, "floralwhite") == 0) return p5_parse_hex_color("#fffaf0");
+    if (strcmp(lower_name, "forestgreen") == 0) return p5_parse_hex_color("#228b22");
+    if (strcmp(lower_name, "fuchsia") == 0) return p5_parse_hex_color("#ff00ff");
+    if (strcmp(lower_name, "gainsboro") == 0) return p5_parse_hex_color("#dcdcdc");
+    if (strcmp(lower_name, "ghostwhite") == 0) return p5_parse_hex_color("#f8f8ff");
+    if (strcmp(lower_name, "gold") == 0) return p5_parse_hex_color("#ffd700");
+    if (strcmp(lower_name, "goldenrod") == 0) return p5_parse_hex_color("#daa520");
+    if (strcmp(lower_name, "gray") == 0) return p5_parse_hex_color("#808080");
+    if (strcmp(lower_name, "grey") == 0) return p5_parse_hex_color("#808080");
+    if (strcmp(lower_name, "green") == 0) return p5_parse_hex_color("#008000");
+    if (strcmp(lower_name, "greenyellow") == 0) return p5_parse_hex_color("#adff2f");
+    if (strcmp(lower_name, "honeydew") == 0) return p5_parse_hex_color("#f0fff0");
+    if (strcmp(lower_name, "hotpink") == 0) return p5_parse_hex_color("#ff69b4");
+    if (strcmp(lower_name, "indianred") == 0) return p5_parse_hex_color("#cd5c5c");
+    if (strcmp(lower_name, "indigo") == 0) return p5_parse_hex_color("#4b0082");
+    if (strcmp(lower_name, "ivory") == 0) return p5_parse_hex_color("#fffff0");
+    if (strcmp(lower_name, "khaki") == 0) return p5_parse_hex_color("#f0e68c");
+    if (strcmp(lower_name, "lavender") == 0) return p5_parse_hex_color("#e6e6fa");
+    if (strcmp(lower_name, "lavenderblush") == 0) return p5_parse_hex_color("#fff0f5");
+    if (strcmp(lower_name, "lawngreen") == 0) return p5_parse_hex_color("#7cfc00");
+    if (strcmp(lower_name, "lemonchiffon") == 0) return p5_parse_hex_color("#fffacd");
+    if (strcmp(lower_name, "lightblue") == 0) return p5_parse_hex_color("#add8e6");
+    if (strcmp(lower_name, "lightcoral") == 0) return p5_parse_hex_color("#f08080");
+    if (strcmp(lower_name, "lightcyan") == 0) return p5_parse_hex_color("#e0ffff");
+    if (strcmp(lower_name, "lightgoldenrodyellow") == 0) return p5_parse_hex_color("#fafad2");
+    if (strcmp(lower_name, "lightgray") == 0) return p5_parse_hex_color("#d3d3d3");
+    if (strcmp(lower_name, "lightgrey") == 0) return p5_parse_hex_color("#d3d3d3");
+    if (strcmp(lower_name, "lightgreen") == 0) return p5_parse_hex_color("#90ee90");
+    if (strcmp(lower_name, "lightpink") == 0) return p5_parse_hex_color("#ffb6c1");
+    if (strcmp(lower_name, "lightsalmon") == 0) return p5_parse_hex_color("#ffa07a");
+    if (strcmp(lower_name, "lightseagreen") == 0) return p5_parse_hex_color("#20b2aa");
+    if (strcmp(lower_name, "lightskyblue") == 0) return p5_parse_hex_color("#87cefa");
+    if (strcmp(lower_name, "lightslategray") == 0) return p5_parse_hex_color("#778899");
+    if (strcmp(lower_name, "lightslategrey") == 0) return p5_parse_hex_color("#778899");
+    if (strcmp(lower_name, "lightsteelblue") == 0) return p5_parse_hex_color("#b0c4de");
+    if (strcmp(lower_name, "lightyellow") == 0) return p5_parse_hex_color("#ffffe0");
+    if (strcmp(lower_name, "lime") == 0) return p5_parse_hex_color("#00ff00");
+    if (strcmp(lower_name, "limegreen") == 0) return p5_parse_hex_color("#32cd32");
+    if (strcmp(lower_name, "linen") == 0) return p5_parse_hex_color("#faf0e6");
+    if (strcmp(lower_name, "magenta") == 0) return p5_parse_hex_color("#ff00ff");
+    if (strcmp(lower_name, "maroon") == 0) return p5_parse_hex_color("#800000");
+    if (strcmp(lower_name, "mediumaquamarine") == 0) return p5_parse_hex_color("#66cdaa");
+    if (strcmp(lower_name, "mediumblue") == 0) return p5_parse_hex_color("#0000cd");
+    if (strcmp(lower_name, "mediumorchid") == 0) return p5_parse_hex_color("#ba55d3");
+    if (strcmp(lower_name, "mediumpurple") == 0) return p5_parse_hex_color("#9370db");
+    if (strcmp(lower_name, "mediumseagreen") == 0) return p5_parse_hex_color("#3cb371");
+    if (strcmp(lower_name, "mediumslateblue") == 0) return p5_parse_hex_color("#7b68ee");
+    if (strcmp(lower_name, "mediumspringgreen") == 0) return p5_parse_hex_color("#00fa9a");
+    if (strcmp(lower_name, "mediumturquoise") == 0) return p5_parse_hex_color("#48d1cc");
+    if (strcmp(lower_name, "mediumvioletred") == 0) return p5_parse_hex_color("#c71585");
+    if (strcmp(lower_name, "midnightblue") == 0) return p5_parse_hex_color("#191970");
+    if (strcmp(lower_name, "mintcream") == 0) return p5_parse_hex_color("#f5fffa");
+    if (strcmp(lower_name, "mistyrose") == 0) return p5_parse_hex_color("#ffe4e1");
+    if (strcmp(lower_name, "moccasin") == 0) return p5_parse_hex_color("#ffe4b5");
+    if (strcmp(lower_name, "navajowhite") == 0) return p5_parse_hex_color("#ffdead");
+    if (strcmp(lower_name, "navy") == 0) return p5_parse_hex_color("#000080");
+    if (strcmp(lower_name, "oldlace") == 0) return p5_parse_hex_color("#fdf5e6");
+    if (strcmp(lower_name, "olive") == 0) return p5_parse_hex_color("#808000");
+    if (strcmp(lower_name, "olivedrab") == 0) return p5_parse_hex_color("#6b8e23");
+    if (strcmp(lower_name, "orange") == 0) return p5_parse_hex_color("#ffa500");
+    if (strcmp(lower_name, "orangered") == 0) return p5_parse_hex_color("#ff4500");
+    if (strcmp(lower_name, "orchid") == 0) return p5_parse_hex_color("#da70d6");
+    if (strcmp(lower_name, "palegoldenrod") == 0) return p5_parse_hex_color("#eee8aa");
+    if (strcmp(lower_name, "palegreen") == 0) return p5_parse_hex_color("#98fb98");
+    if (strcmp(lower_name, "paleturquoise") == 0) return p5_parse_hex_color("#afeeee");
+    if (strcmp(lower_name, "palevioletred") == 0) return p5_parse_hex_color("#db7093");
+    if (strcmp(lower_name, "papayawhip") == 0) return p5_parse_hex_color("#ffefd5");
+    if (strcmp(lower_name, "peachpuff") == 0) return p5_parse_hex_color("#ffdab9");
+    if (strcmp(lower_name, "peru") == 0) return p5_parse_hex_color("#cd853f");
+    if (strcmp(lower_name, "pink") == 0) return p5_parse_hex_color("#ffc0cb");
+    if (strcmp(lower_name, "plum") == 0) return p5_parse_hex_color("#dda0dd");
+    if (strcmp(lower_name, "powderblue") == 0) return p5_parse_hex_color("#b0e0e6");
+    if (strcmp(lower_name, "purple") == 0) return p5_parse_hex_color("#800080");
+    if (strcmp(lower_name, "rebeccapurple") == 0) return p5_parse_hex_color("#663399");
+    if (strcmp(lower_name, "red") == 0) return p5_parse_hex_color("#ff0000");
+    if (strcmp(lower_name, "rosybrown") == 0) return p5_parse_hex_color("#bc8f8f");
+    if (strcmp(lower_name, "royalblue") == 0) return p5_parse_hex_color("#4169e1");
+    if (strcmp(lower_name, "saddlebrown") == 0) return p5_parse_hex_color("#8b4513");
+    if (strcmp(lower_name, "salmon") == 0) return p5_parse_hex_color("#fa8072");
+    if (strcmp(lower_name, "sandybrown") == 0) return p5_parse_hex_color("#f4a460");
+    if (strcmp(lower_name, "seagreen") == 0) return p5_parse_hex_color("#2e8b57");
+    if (strcmp(lower_name, "seashell") == 0) return p5_parse_hex_color("#fff5ee");
+    if (strcmp(lower_name, "sienna") == 0) return p5_parse_hex_color("#a0522d");
+    if (strcmp(lower_name, "silver") == 0) return p5_parse_hex_color("#c0c0c0");
+    if (strcmp(lower_name, "skyblue") == 0) return p5_parse_hex_color("#87ceeb");
+    if (strcmp(lower_name, "slateblue") == 0) return p5_parse_hex_color("#6a5acd");
+    if (strcmp(lower_name, "slategray") == 0) return p5_parse_hex_color("#708090");
+    if (strcmp(lower_name, "slategrey") == 0) return p5_parse_hex_color("#708090");
+    if (strcmp(lower_name, "snow") == 0) return p5_parse_hex_color("#fffafa");
+    if (strcmp(lower_name, "springgreen") == 0) return p5_parse_hex_color("#00ff7f");
+    if (strcmp(lower_name, "steelblue") == 0) return p5_parse_hex_color("#4682b4");
+    if (strcmp(lower_name, "tan") == 0) return p5_parse_hex_color("#d2b48c");
+    if (strcmp(lower_name, "teal") == 0) return p5_parse_hex_color("#008080");
+    if (strcmp(lower_name, "thistle") == 0) return p5_parse_hex_color("#d8bfd8");
+    if (strcmp(lower_name, "tomato") == 0) return p5_parse_hex_color("#ff6347");
+    if (strcmp(lower_name, "turquoise") == 0) return p5_parse_hex_color("#40e0d0");
+    if (strcmp(lower_name, "violet") == 0) return p5_parse_hex_color("#ee82ee");
+    if (strcmp(lower_name, "wheat") == 0) return p5_parse_hex_color("#f5deb3");
+    if (strcmp(lower_name, "white") == 0) return p5_parse_hex_color("#ffffff");
+    if (strcmp(lower_name, "whitesmoke") == 0) return p5_parse_hex_color("#f5f5f5");
+    if (strcmp(lower_name, "yellow") == 0) return p5_parse_hex_color("#ffff00");
+    if (strcmp(lower_name, "yellowgreen") == 0) return p5_parse_hex_color("#9acd32");
+    
+    // Default to white if color not found
+    return p5_parse_hex_color("#ffffff");
+}
+
+// Public color parsing function
+p5_Color p5_color(const char* color_str) {
+    if (color_str[0] == '#') {
+        return p5_parse_hex_color(color_str);
+    } else {
+        return p5_parse_named_color(color_str);
+    }
+}
+
+
+#endif // P5_IMPLEMENTATION
 
