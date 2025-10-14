@@ -6,11 +6,22 @@
 #include "deps/sokol_gfx.h"
 #include "deps/sokol_glue.h"
 #include "deps/sokol_gl.h"
-#include "deps/clay.h"
-#include "deps/sokol_clay.h"
 #include "deps/fontstash.h"
 
 #include "../p5.h"
+#include "../renderers/sokol_p5.h"
+
+enum {
+    FONT_DROID_SANS = 0
+};
+
+static char *font_files[] = {
+    [FONT_DROID_SANS] = "resources/fonts/DroidSans.ttf",
+};
+
+static struct {
+    sp5_font_t fonts[sizeof(font_files)];
+} state;
 
 void frame()
 {   
@@ -23,7 +34,7 @@ void frame()
     // Clay_BeginLayout();
     // ui_container();
     // // CornerRadiusTest();
-    p5_RenderCommandArray clay_commands;
+    p5_RenderCommandArray clay_commands = {0};
     // = Clay_EndLayout();
 
     sgl_matrix_mode_modelview();
@@ -40,9 +51,6 @@ void event(const sapp_event* ev)
 {
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_ESCAPE) {
         sapp_quit();
-    } else if(ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_D){
-        state.debug_mode = !state.debug_mode;
-        Clay_SetDebugModeEnabled(state.debug_mode);
     } else {
         sp5_handle_event(ev);
     }
@@ -50,7 +58,6 @@ void event(const sapp_event* ev)
 
 void init()
 {
-    state.debug_mode = false;
     // setup sokol
     sg_setup(&(sg_desc){
         .environment = sglue_environment(),
@@ -69,11 +76,11 @@ void init()
     }
 
     // setup clay
-    uint64_t clay_mem_size = Clay_MinMemorySize();
-    Clay_Arena clay_mem = Clay_CreateArenaWithCapacityAndMemory(clay_mem_size, malloc(clay_mem_size));
-    Clay_Initialize(clay_mem, (Clay_Dimensions){ sapp_width(), sapp_height() }, (Clay_ErrorHandler){0});
-
-    Clay_SetMeasureTextFunction(sp5_measure_text, &state.fonts);
+    // uint64_t clay_mem_size = Clay_MinMemorySize();
+    // Clay_Arena clay_mem = Clay_CreateArenaWithCapacityAndMemory(clay_mem_size, malloc(clay_mem_size));
+    // Clay_Initialize(clay_mem, (Clay_Dimensions){ sapp_width(), sapp_height() }, (Clay_ErrorHandler){0});
+    //
+    // Clay_SetMeasureTextFunction(sp5_measure_text, &state.fonts);
 }
 
 void cleanup()

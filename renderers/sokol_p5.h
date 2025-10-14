@@ -105,7 +105,7 @@
             sp5_shutdown()
  */
 
-#include "p5.h"
+// #include "p5.h"
 
 #if !defined(SOKOL_P5_NO_SOKOL_APP) && !defined(SOKOL_APP_INCLUDED)
 #error "Please include sokol_app.h before sokol_p5.h (or define SOKOL_P5_NO_SOKOL_APP)"
@@ -151,7 +151,7 @@ void sp5_render(p5_RenderCommandArray renderCommands, sp5_font_t *fonts);
 #ifndef SOKOL_FONTSTASH_INCLUDED
 #error "Please include sokol_fontstash.h before sokol_p5.h"
 #endif
-#ifndef P5_HEADER
+#ifndef P5_H
 #error "Please include p5.h before sokol_p5.h"
 #endif
 
