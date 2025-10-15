@@ -360,12 +360,12 @@ p5_da_foreach(int, x, &xs) {
 /*** Renderer Commands ***/
 
 
-typedef struct {
-    float pos[3];
-    float uv[2];
-    uint32_t rgba;
-    float psize;
-} p5_RenderVertex;
+// typedef struct {
+//     float pos[3];
+//     float uv[2];
+//     uint32_t rgba;
+//     float psize;
+// } p5_RenderVertex;
 
 typedef enum {
     P5_RENDER_ARC,
@@ -373,12 +373,46 @@ typedef enum {
     P5_RENDER_POINT,
     P5_RENDER_QUAD,
     P5_RENDER_TRIANGLE,
-} p5_RenderCommand;
+} p5_RenderType;
+
+typedef struct {
+} p5_RenderArc;
+
+typedef struct {
+    float x; //j Number: x-coordinate of the rectangle.
+    float y; // Number: y-coordinate of the rectangle.
+    float w; // Number: width of the rectangle.
+    float h; // Number: height of the rectangle.
+    float tl; // Number: optional radius of top-left corner.
+    float tr; // Number: optional radius of top-right corner.
+    float br; // Number: optional radius of bottom-right corner.
+    float bl; // Number: optional radius of bottom-left corner.
+    p5_Color bg_color;
+    p5_Color border_color;
+    float border_width;
+} p5_RenderRect;
+
+typedef struct {
+    float x; //j Number: x-coordinate of the rectangle.
+    float y; // Number: y-coordinate of the rectangle.
+    p5_Color color;
+} p5_RenderPoint;
+
+typedef struct {
+} p5_RenderQuad;
+
+typedef struct {
+} p5_RenderTriangle;
 
 typedef struct p5_Render {
-    p5_RenderCommand command;
-    void *data;
-} p5_RenderData;
+    p5_RenderType type;
+    union {
+        p5_RenderArc arc;
+        p5_RenderPoint point;
+        p5_RenderQuad quad;
+        p5_RenderTriangle triangle;
+    };
+} p5_RenderCommand;
 
 // A sized array of render commands.
 typedef struct p5_RenderCommandArray {
@@ -390,57 +424,6 @@ typedef struct p5_RenderCommandArray {
     p5_RenderCommand* items;
 } p5_RenderCommandArray;
 
-
-// Controls how text "wraps", that is how it is broken into multiple lines when there is insufficient horizontal space.
-typedef enum {
-    // (default) breaks on whitespace characters.
-    P5_TEXT_WRAP_WORDS,
-    // Don't break on space characters, only on newlines.
-    P5_TEXT_WRAP_NEWLINES,
-    // Disable text wrapping entirely.
-    P5_TEXT_WRAP_NONE,
-} p5_TextElementConfigWrapMode;
-
-// Controls how wrapped lines of text are horizontally aligned within the outer text bounding box.
-typedef enum {
-    // (default) Horizontally aligns wrapped lines of text to the left hand side of their bounding box.
-    P5_TEXT_ALIGN_LEFT,
-    // Horizontally aligns wrapped lines of text to the center of their bounding box.
-    P5_TEXT_ALIGN_CENTER,
-    // Horizontally aligns wrapped lines of text to the right hand side of their bounding box.
-    P5_TEXT_ALIGN_RIGHT,
-} p5_TextAlignment;
-
-// Controls various functionality related to text elements.
-typedef struct p5_TextElementConfig {
-    // A pointer that will be transparently passed through to the resulting render command.
-    void *userData;
-    // The RGBA color of the font to render, conventionally specified as 0-255.
-    p5_Color textColor;
-    // An integer transparently passed to p5_MeasureText to identify the font to use.
-    // The debug view will pass fontId = 0 for its internal text.
-    uint16_t fontId;
-    // Controls the size of the font. Handled by the function provided to p5_MeasureText.
-    uint16_t fontSize;
-    // Controls extra horizontal spacing between characters. Handled by the function provided to p5_MeasureText.
-    uint16_t letterSpacing;
-    // Controls additional vertical space between wrapped lines of text.
-    uint16_t lineHeight;
-    // Controls how text "wraps", that is how it is broken into multiple lines when there is insufficient horizontal space.
-    // P5_TEXT_WRAP_WORDS (default) breaks on whitespace characters.
-    // P5_TEXT_WRAP_NEWLINES doesn't break on space characters, only on newlines.
-    // P5_TEXT_WRAP_NONE disables wrapping entirely.
-    p5_TextElementConfigWrapMode wrapMode;
-    // Controls how wrapped lines of text are horizontally aligned within the outer text bounding box.
-    // P5_TEXT_ALIGN_LEFT (default) - Horizontally aligns wrapped lines of text to the left hand side of their bounding box.
-    // P5_TEXT_ALIGN_CENTER - Horizontally aligns wrapped lines of text to the center of their bounding box.
-    // P5_TEXT_ALIGN_RIGHT - Horizontally aligns wrapped lines of text to the right hand side of their bounding box.
-    p5_TextAlignment textAlignment;
-} p5_TextElementConfig;
-
-typedef struct p5_Dimensions {
-    float width, height;
-} p5_Dimensions;
 
 /*** Global State ***/
 
@@ -509,24 +492,40 @@ p5_RenderCommandArray p5_render_commands()
 //
 #ifdef P5_IMPLEMENTATION
 
+void p5_rect(float x, float y, float w, float h)
+{
+    p5_RenderRect rect = {
+        .x = x,
+        .y = y,
+        .w = w,
+        .h = h
+        .bg_color = p5_state.draw.fill_color;
+    };
+    p5_da_append(&p5_state.commands, rect);
+}
+
 // Color functions
-p5_Color p5_color_rgb(unsigned int r, unsigned int g, unsigned int b) {
+p5_Color p5_color_rgb(unsigned int r, unsigned int g, unsigned int b)
+{
     return (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
 }
 
-p5_Color p5_color_rbga(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
+p5_Color p5_color_rbga(unsigned int r, unsigned int g, unsigned int b, unsigned int a)
+{
     return (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
 }
 
 // Helper function to parse hex color strings
-static int p5_hex_char_to_int(char c) {
+static int p5_hex_char_to_int(char c)
+{
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
     if (c >= 'a' && c <= 'f') return c - 'a' + 10;
     return 0;
 }
 
-static p5_Color p5_parse_hex_color(const char* hex) {
+static p5_Color p5_parse_hex_color(const char* hex)
+{
     p5_Color color = {0.0f, 0.0f, 0.0f, 1.0f};
     int len = strlen(hex);
     
@@ -570,7 +569,8 @@ static p5_Color p5_parse_hex_color(const char* hex) {
 }
 
 // Named color lookup (subset of CSS colors)
-static p5_Color p5_parse_named_color(const char* name) {
+static p5_Color p5_parse_named_color(const char* name)
+{
     // Convert to lowercase for case-insensitive comparison
     char lower_name[32];
     int i = 0;
@@ -735,7 +735,8 @@ static p5_Color p5_parse_named_color(const char* name) {
 }
 
 // Public color parsing function
-p5_Color p5_color(const char* color_str) {
+p5_Color p5_color(const char* color_str)
+{
     if (color_str[0] == '#') {
         return p5_parse_hex_color(color_str);
     } else {

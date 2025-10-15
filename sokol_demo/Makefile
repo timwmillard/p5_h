@@ -3,7 +3,7 @@ UNAME_S := $(shell uname -s)
 
 # Common compiler flags
 CFLAGS = -std=c99 -Wall -Wextra -O2
-INCLUDES =  -I. -Ideps -I.. -I../renderers
+INCLUDES =  -I. -I.. -Ideps -I../renderers/sokol -I../renderers/sokol/deps
 
 # Platform-specific configuration
 ifeq ($(UNAME_S), Linux)
