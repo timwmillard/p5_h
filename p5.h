@@ -359,165 +359,29 @@ p5_da_foreach(int, x, &xs) {
 
 /*** Renderer Commands ***/
 
+
 typedef struct {
-    char *items;
-    size_t count;
-    size_t capacity;
-} p5_StringSlice;
+    float pos[3];
+    float uv[2];
+    uint32_t rgba;
+    float psize;
+} p5_RenderVertex;
 
-typedef struct p5_CornerRadius {
-    float topLeft;
-    float topRight;
-    float bottomLeft;
-    float bottomRight;
-} p5_CornerRadius;
-
-// Controls the widths of individual element borders.
-typedef struct p5_BorderWidth {
-    uint16_t left;
-    uint16_t right;
-    uint16_t top;
-    uint16_t bottom;
-    // Creates borders between each child element, depending on the .layoutDirection.
-    // e.g. for LEFT_TO_RIGHT, borders will be vertical lines, and for TOP_TO_BOTTOM borders will be horizontal lines.
-    // .betweenChildren borders will result in individual RECTANGLE render commands being generated.
-    uint16_t betweenChildren;
-} p5_BorderWidth;
-
-// Render command data when commandType == P5_RENDER_COMMAND_TYPE_TEXT
-typedef struct p5_TextRenderData {
-    // A string slice containing the text to be rendered.
-    // Note: this is not guaranteed to be null terminated.
-    p5_StringSlice stringContents;
-    // Conventionally represented as 0-255 for each channel, but interpretation is up to the renderer.
-    p5_Color textColor;
-    // An integer representing the font to use to render this text, transparently passed through from the text declaration.
-    uint16_t fontId;
-    uint16_t fontSize;
-    // Specifies the extra whitespace gap in pixels between each character.
-    uint16_t letterSpacing;
-    // The height of the bounding box for this line of text.
-    uint16_t lineHeight;
-} p5_TextRenderData;
-
-// Render command data when commandType == P5_RENDER_COMMAND_TYPE_RECTANGLE
-typedef struct p5_RectangleRenderData {
-    // The solid background color to fill this rectangle with. Conventionally represented as 0-255 for each channel, but interpretation is up to the renderer.
-    p5_Color backgroundColor;
-    // Controls the "radius", or corner rounding of elements, including rectangles, borders and images.
-    // The rounding is determined by drawing a circle inset into the element corner by (radius, radius) pixels.
-    p5_CornerRadius cornerRadius;
-} p5_RectangleRenderData;
-
-// Render command data when commandType == P5_RENDER_COMMAND_TYPE_IMAGE
-typedef struct p5_ImageRenderData {
-    // The tint color for this image. Note that the default value is 0,0,0,0 and should likely be interpreted
-    // as "untinted".
-    // Conventionally represented as 0-255 for each channel, but interpretation is up to the renderer.
-    p5_Color backgroundColor;
-    // Controls the "radius", or corner rounding of this image.
-    // The rounding is determined by drawing a circle inset into the element corner by (radius, radius) pixels.
-    p5_CornerRadius cornerRadius;
-    // A pointer transparently passed through from the original element definition, typically used to represent image data.
-    void* imageData;
-} p5_ImageRenderData;
-
-// Render command data when commandType == P5_RENDER_COMMAND_TYPE_CUSTOM
-typedef struct p5_CustomRenderData {
-    // Passed through from .backgroundColor in the original element declaration.
-    // Conventionally represented as 0-255 for each channel, but interpretation is up to the renderer.
-    p5_Color backgroundColor;
-    // Controls the "radius", or corner rounding of this custom element.
-    // The rounding is determined by drawing a circle inset into the element corner by (radius, radius) pixels.
-    p5_CornerRadius cornerRadius;
-    // A pointer transparently passed through from the original element definition.
-    void* customData;
-} p5_CustomRenderData;
-
-// Render command data when commandType == P5_RENDER_COMMAND_TYPE_SCISSOR_START || commandType == P5_RENDER_COMMAND_TYPE_SCISSOR_END
-typedef struct p5_ScrollRenderData {
-    bool horizontal;
-    bool vertical;
-} p5_ClipRenderData;
-
-// Render command data when commandType == P5_RENDER_COMMAND_TYPE_BORDER
-typedef struct p5_BorderRenderData {
-    // Controls a shared color for all this element's borders.
-    // Conventionally represented as 0-255 for each channel, but interpretation is up to the renderer.
-    p5_Color color;
-    // Specifies the "radius", or corner rounding of this border element.
-    // The rounding is determined by drawing a circle inset into the element corner by (radius, radius) pixels.
-    p5_CornerRadius cornerRadius;
-    // Controls individual border side widths.
-    p5_BorderWidth width;
-} p5_BorderRenderData;
-
-// A struct union containing data specific to this command's .commandType
-typedef union p5_RenderData {
-    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_RECTANGLE
-    p5_RectangleRenderData rectangle;
-    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_TEXT
-    p5_TextRenderData text;
-    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_IMAGE
-    p5_ImageRenderData image;
-    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_CUSTOM
-    p5_CustomRenderData custom;
-    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_BORDER
-    p5_BorderRenderData border;
-    // Render command data when commandType == P5_RENDER_COMMAND_TYPE_SCISSOR_START|END
-    p5_ClipRenderData clip;
-} p5_RenderData;
-
-// Used by renderers to determine specific handling for each render command.
 typedef enum {
-    // This command type should be skipped.
-    P5_RENDER_COMMAND_TYPE_NONE,
-    // The renderer should draw a solid color rectangle.
-    P5_RENDER_COMMAND_TYPE_RECTANGLE,
-    // The renderer should draw a colored border inset into the bounding box.
-    P5_RENDER_COMMAND_TYPE_BORDER,
-    // The renderer should draw text.
-    P5_RENDER_COMMAND_TYPE_TEXT,
-    // The renderer should draw an image.
-    P5_RENDER_COMMAND_TYPE_IMAGE,
-    // The renderer should begin clipping all future draw commands, only rendering content that falls within the provided boundingBox.
-    P5_RENDER_COMMAND_TYPE_SCISSOR_START,
-    // The renderer should finish any previously active clipping, and begin rendering elements in full again.
-    P5_RENDER_COMMAND_TYPE_SCISSOR_END,
-    // The renderer should provide a custom implementation for handling this render command based on its .customData
-    P5_RENDER_COMMAND_TYPE_CUSTOM,
-} p5_RenderCommandType;
-
-typedef struct p5_BoundingBox {
-    float x, y, width, height;
-} p5_BoundingBox;
-
-typedef struct p5_RenderCommand {
-    // A rectangular box that fully encloses this UI element, with the position relative to the root of the layout.
-    p5_BoundingBox boundingBox;
-    // A struct union containing data specific to this command's commandType.
-    p5_RenderData renderData;
-    // A pointer transparently passed through from the original element declaration.
-    void *userData;
-    // The id of this element, transparently passed through from the original element declaration.
-    uint32_t id;
-    // The z order required for drawing this command correctly.
-    // Note: the render command array is already sorted in ascending order, and will produce correct results if drawn in naive order.
-    // This field is intended for use in batching renderers for improved performance.
-    int16_t zIndex;
-    // Specifies how to handle rendering of this command.
-    // P5_RENDER_COMMAND_TYPE_RECTANGLE - The renderer should draw a solid color rectangle.
-    // P5_RENDER_COMMAND_TYPE_BORDER - The renderer should draw a colored border inset into the bounding box.
-    // P5_RENDER_COMMAND_TYPE_TEXT - The renderer should draw text.
-    // P5_RENDER_COMMAND_TYPE_IMAGE - The renderer should draw an image.
-    // P5_RENDER_COMMAND_TYPE_SCISSOR_START - The renderer should begin clipping all future draw commands, only rendering content that falls within the provided boundingBox.
-    // P5_RENDER_COMMAND_TYPE_SCISSOR_END - The renderer should finish any previously active clipping, and begin rendering elements in full again.
-    // P5_RENDER_COMMAND_TYPE_CUSTOM - The renderer should provide a custom implementation for handling this render command based on its .customData
-    p5_RenderCommandType commandType;
+    P5_RENDER_ARC,
+    P5_RENDER_RECT,
+    P5_RENDER_POINT,
+    P5_RENDER_QUAD,
+    P5_RENDER_TRIANGLE,
 } p5_RenderCommand;
 
+typedef struct p5_Render {
+    p5_RenderCommand command;
+    void *data;
+} p5_RenderData;
+
 // A sized array of render commands.
-typedef struct p5_RenderCommandList {
+typedef struct p5_RenderCommandArray {
     // The underlying max capacity of the array, not necessarily all initialized.
     int32_t capacity;
     // The number of initialized elements in this array. Used for loops and iteration.

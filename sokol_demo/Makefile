@@ -84,6 +84,10 @@ open-simplex-noise:
 	wget -O deps/open-simplex-noise.c https://raw.githubusercontent.com/smcameron/open-simplex-noise-in-c/refs/heads/master/open-simplex-noise.c
 	wget -O deps/open-simplex-noise.h https://raw.githubusercontent.com/smcameron/open-simplex-noise-in-c/refs/heads/master/open-simplex-noise.h
 
+# TODO: delete - just a reference
+clay:
+	wget -O deps/clay.h https://raw.githubusercontent.com/nicbarker/clay/refs/heads/main/clay.h
+
 
 # Compile Flags
 compile_flags.txt: FORCE
