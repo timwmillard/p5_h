@@ -1,12 +1,11 @@
 #include "raylib.h"
 
-#define P5RAYLIB_IMPLEMENTATION
-#define P5_IMPLEMENTATION
+#define P5RAYLIB_IMPL
+#define P5_IMPL
 #define P5_NO_SHORT_NAMES
+
 #include "p5.h"
 #include "p5raylib.h"
-
-#include "canvas.c"
 
 int main(void)
 {
@@ -15,15 +14,7 @@ int main(void)
 
     while(!WindowShouldClose()) {
         BeginDrawing();
-            ClearBackground(RAYWHITE);
-
-            int posX = 50;
-            int posY = 50;
-            int width = 100;
-            int height = 200;
-            Color color = ORANGE;
-            DrawRectangle(posX, posY, width, height, color);
-
+            p5raylib_clear_background();
             p5raylib_render();
         EndDrawing();
     }

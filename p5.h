@@ -478,6 +478,7 @@ static struct {
 
 p5render_CommandArray p5render_commands();
 void p5render_commands_reset();
+p5_Color p5render_clearbackground();
 
 #endif // P5_H
 
@@ -490,7 +491,12 @@ void p5render_commands_reset();
 //
 // >>implementation
 //
-#ifdef P5_IMPLEMENTATION
+#ifdef P5_IMPL
+
+p5_Color p5render_background_color()
+{
+    return p5_state.background_color;
+}
 
 p5render_CommandArray p5render_commands()
 {
@@ -502,6 +508,15 @@ void p5render_commands_reset()
     p5_state.commands.count = 0;
 }
 
+void p5_background(p5_Color color)
+{
+    p5_state.background_color = color;
+}
+
+void p5_background_rgb(unsigned int r, unsigned int g, unsigned int b)
+{
+    p5_state.background_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
+}
 
 void p5_rect(float x, float y, float w, float h)
 {
@@ -527,6 +542,87 @@ p5_Color p5_color_rgb(unsigned int r, unsigned int g, unsigned int b)
 p5_Color p5_color_rbga(unsigned int r, unsigned int g, unsigned int b, unsigned int a)
 {
     return (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+}
+
+void p5_fill(p5_Color color) {
+    p5_state.draw.fill_color = color;
+    p5_state.draw.has_fill = true;
+}
+
+void p5_fill_rgb(unsigned int r, unsigned int g, unsigned int b) {
+    p5_state.draw.fill_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
+    p5_state.draw.has_fill = true;
+}
+
+
+void p5_fill_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
+    p5_state.draw.fill_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+    p5_state.draw.has_fill = true;
+}
+
+void p5_stroke(p5_Color color) {
+    p5_state.draw.stroke_color = color;
+    p5_state.draw.has_stroke = true;
+}
+
+void p5_stroke_rgb(unsigned int r, unsigned int g, unsigned int b) {
+    p5_state.draw.stroke_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
+    p5_state.draw.has_stroke = true;
+}
+
+
+void p5_stroke_rgba(unsigned int r, unsigned int g, unsigned int b, unsigned int a) {
+    p5_state.draw.stroke_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+    p5_state.draw.has_stroke = true;
+}
+
+void p5_stroke_weight(float weight) {
+    p5_state.draw.stroke_width = weight;
+}
+
+void p5_no_fill(void) {
+    p5_state.draw.has_fill = false;
+}
+
+void p5_no_stroke(void) {
+    p5_state.draw.has_stroke = false;
+}
+
+// Angle mode functions
+void p5_angle_mode(p5_AngleMode mode) {
+    p5_state.draw.angle_mode = mode;
+}
+
+// Color mode functions
+void p5_color_mode(p5_ColorMode mode) {
+    p5_state.draw.color_mode = mode;
+    // Set default maximums based on color mode
+    if (mode == P5_RGB) {
+        p5_state.color_maxes[0] = 255.0f;  // R
+        p5_state.color_maxes[1] = 255.0f;  // G
+        p5_state.color_maxes[2] = 255.0f;  // B
+        p5_state.color_maxes[3] = 255.0f;  // A
+    } else if (mode == P5_HSB || mode == P5_HSL) {
+        p5_state.color_maxes[0] = 360.0f;  // H
+        p5_state.color_maxes[1] = 100.0f;  // S
+        p5_state.color_maxes[2] = 100.0f;  // B/L
+        p5_state.color_maxes[3] = 100.0f;  // A
+    }
+}
+
+void p5_color_mode_range(p5_ColorMode mode, float max1, float max2, float max3, float maxA) {
+    p5_state.draw.color_mode = mode;
+    p5_state.color_maxes[0] = max1;
+    p5_state.color_maxes[1] = max2;
+    p5_state.color_maxes[2] = max3;
+    p5_state.color_maxes[3] = maxA;
+}
+
+// Text output function (stub for accessibility)
+void p5_text_output(void) {
+    // This is a stub - in a full implementation this would create
+    // screen reader accessible descriptions of the canvas content
+    TODO("p5_text_output not implemented");
 }
 
 // Helper function to parse hex color strings
@@ -759,5 +855,5 @@ p5_Color p5_color(const char* color_str)
 }
 
 
-#endif // P5_IMPLEMENTATION
+#endif // P5_IMPL
 
