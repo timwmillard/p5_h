@@ -5,7 +5,7 @@
 #define P5_NO_SHORT_NAMES
 
 #include "p5.h"
-#include "p5raylib.h"
+#include "p5_raylib.h"
 
 int main(void)
 {
