@@ -9,7 +9,7 @@
 #include "deps/fontstash.h"
 
 #include "../p5.h"
-#include "../renderers/sokol_p5.h"
+#include "../../renderers/sokol/p5_sokol.h"
 
 enum {
     FONT_DROID_SANS = 0

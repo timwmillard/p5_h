@@ -357,15 +357,15 @@ p5_da_foreach(int, x, &xs) {
 */
 #define p5_da_foreach(Type, it, da) for (Type *it = (da)->items; it < (da)->items + (da)->count; ++it)
 
-/*** Renderer Commands ***/
 
+/*** Renderer Commands ***/
 
 // typedef struct {
 //     float pos[3];
 //     float uv[2];
 //     uint32_t rgba;
 //     float psize;
-// } p5_RenderVertex;
+// } p5_render_Vertex;
 
 typedef enum {
     P5_RENDER_ARC,
@@ -373,10 +373,10 @@ typedef enum {
     P5_RENDER_POINT,
     P5_RENDER_QUAD,
     P5_RENDER_TRIANGLE,
-} p5_RenderType;
+} p5_render_Type;
 
 typedef struct {
-} p5_RenderArc;
+} p5_render_Arc;
 
 typedef struct {
     float x; //j Number: x-coordinate of the rectangle.
@@ -390,39 +390,40 @@ typedef struct {
     p5_Color bg_color;
     p5_Color border_color;
     float border_width;
-} p5_RenderRect;
+} p5_render_Rect;
 
 typedef struct {
     float x; //j Number: x-coordinate of the rectangle.
     float y; // Number: y-coordinate of the rectangle.
     p5_Color color;
-} p5_RenderPoint;
+} p5_render_Point;
 
 typedef struct {
-} p5_RenderQuad;
+} p5_render_Quad;
 
 typedef struct {
-} p5_RenderTriangle;
+} p5_render_Triangle;
 
-typedef struct p5_Render {
-    p5_RenderType type;
+typedef struct p5_render_ {
+    p5_render_Type type;
     union {
-        p5_RenderArc arc;
-        p5_RenderPoint point;
-        p5_RenderQuad quad;
-        p5_RenderTriangle triangle;
+        p5_render_Arc arc;
+        p5_render_Rect rect;
+        p5_render_Point point;
+        p5_render_Quad quad;
+        p5_render_Triangle triangle;
     };
-} p5_RenderCommand;
+} p5_render_Command;
 
 // A sized array of render commands.
-typedef struct p5_RenderCommandArray {
+typedef struct p5_render_CommandArray {
     // The underlying max capacity of the array, not necessarily all initialized.
     int32_t capacity;
     // The number of initialized elements in this array. Used for loops and iteration.
     int32_t count;
     // A pointer to the first element in the internal array.
-    p5_RenderCommand* items;
-} p5_RenderCommandArray;
+    p5_render_Command* items;
+} p5_render_CommandArray;
 
 
 /*** Global State ***/
@@ -468,13 +469,13 @@ static struct {
     bool setup_called; // setup() function has been called, only run once.
     float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
     
-    p5_RenderCommandArray commands;
+    p5_render_CommandArray commands;
 
-    p5_RenderCommandArray commands_stack[32];
+    p5_render_CommandArray commands_stack[32];
     int commands_stack_depth;
 } p5_state;
 
-p5_RenderCommandArray p5_render_commands()
+p5_render_CommandArray p5_render_commands()
 {
     return p5_state.commands;
 }
@@ -494,14 +495,17 @@ p5_RenderCommandArray p5_render_commands()
 
 void p5_rect(float x, float y, float w, float h)
 {
-    p5_RenderRect rect = {
-        .x = x,
-        .y = y,
-        .w = w,
-        .h = h
-        .bg_color = p5_state.draw.fill_color;
+    p5_render_Command cmd = {
+        .type = P5_RENDER_RECT,
+        .rect = {
+            .x = x,
+            .y = y,
+            .w = w,
+            .h = h,
+            .bg_color = p5_state.draw.fill_color,
+        }
     };
-    p5_da_append(&p5_state.commands, rect);
+    p5_da_append(&p5_state.commands, cmd);
 }
 
 // Color functions
