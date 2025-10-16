@@ -77,6 +77,16 @@ void p5raylib_render()
                 float x = arc.x;
                 float y = arc.y;
                 float r = arc.r;
+                float s = cmd.stroke_width;
+                if (cmd.has_fill) { 
+                    Color color = p5raylib_color(cmd.fill_color);
+                    // if has_stroke increase fill by half stroke, to hide gaps.
+                    DrawCircle(x, y, cmd.has_stroke? r+s/2 : r, color);
+                }
+                if (cmd.has_stroke) {
+                    Color color =  p5raylib_color(cmd.stroke_color);
+                    DrawRing((Vector2){x, y}, r, r+s, 0, 360, 32, color);
+                }
             } break;
             case P5_RENDER_POINT:
             case P5_RENDER_QUAD:
