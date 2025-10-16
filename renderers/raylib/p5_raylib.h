@@ -89,12 +89,13 @@ void p5raylib_render()
                 }
             } break;
             case P5_RENDER_POINT: {
-                if (cmd.has_fill) { 
+                if (cmd.has_stroke) { 
                     p5render_Point point = cmd.point;
                     float x = point.x;
                     float y = point.y;
-                    Color color =  p5raylib_color(cmd.fill_color);
-                    DrawRectangle(x, y, 1, 1, color);
+                    float s = cmd.stroke_width;
+                    Color color =  p5raylib_color(cmd.stroke_color);
+                    DrawCircle(x, y, s, color);
                 }
             } break;
             case P5_RENDER_QUAD: {

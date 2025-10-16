@@ -53,9 +53,11 @@ void draw_ball(Ball *ball) {
 void draw()
 {
     background(COLOR("#888"));
-    stroke(COLOR("#157ed4"));
+    // stroke(COLOR("#157ed4"));
     // circle(50, 50, 100);
-    square(50, 50, 100);
+    // square(50, 50, 100);
+    // strokeWeight(1);
+    // point(10, 10);
 
     for (int i = 0; i < BALL_COUNT; i++) {
         Ball *ball = &balls[i];
