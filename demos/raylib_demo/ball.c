@@ -56,7 +56,6 @@ void draw()
     stroke(COLOR("#157ed4"));
     // circle(50, 50, 100);
     square(50, 50, 100);
-    point(10, 10);
 
     for (int i = 0; i < BALL_COUNT; i++) {
         Ball *ball = &balls[i];

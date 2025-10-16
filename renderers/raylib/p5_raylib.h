@@ -94,7 +94,7 @@ void p5raylib_render()
                     float x = point.x;
                     float y = point.y;
                     Color color =  p5raylib_color(cmd.fill_color);
-                    // DrawPoint(x, y, color);
+                    DrawRectangle(x, y, 1, 1, color);
                 }
             } break;
             case P5_RENDER_QUAD: {

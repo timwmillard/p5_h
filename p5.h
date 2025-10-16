@@ -207,7 +207,7 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
 #define max P5_MAX
 #define min P5_MIN
 
-// should this be decricated for color
+// should this be deprecated for color
 #define COLOR p5_color
 
 // Type aliases
