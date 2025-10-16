@@ -1,3 +1,6 @@
+#if defined(P5_IMPL) && !defined(P5RAYLIB_IMPL)
+#define P5RAYLIB_IMPL
+#endif
 
 #ifndef P5RAYLIB_H
 #define P5RAYLIB_H

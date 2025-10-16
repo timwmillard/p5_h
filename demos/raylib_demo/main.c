@@ -1,9 +1,7 @@
 #include "raylib.h"
 
-#define P5RAYLIB_IMPL
 #define P5_IMPL
 #define P5_NO_SHORT_NAMES
-
 #include "p5.h"
 #include "p5_raylib.h"
 
