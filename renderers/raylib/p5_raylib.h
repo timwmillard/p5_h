@@ -1,9 +1,9 @@
-#if defined(P5_IMPL) && !defined(P5RAYLIB_IMPL)
-#define P5RAYLIB_IMPL
+#if defined(P5_IMPL) && !defined(P5_RAYLIB_IMPL)
+#define P5_RAYLIB_IMPL
 #endif
 
-#ifndef P5RAYLIB_H
-#define P5RAYLIB_H
+#ifndef P5_RAYLIB_H
+#define P5_RAYLIB_H
 
 #include <stdio.h>
 #ifndef P5_H
@@ -16,7 +16,7 @@ void p5raylib_init();
 void p5raylib_clear_background();
 void p5raylib_render();
 
-#endif // P5RAYLIB_H
+#endif // P5_RAYLIB_H
 
 
 // ██ ███    ███ ██████  ██      ███████ ███    ███ ███████ ███    ██ ████████  █████  ████████ ██  ██████  ███    ██
@@ -27,7 +27,7 @@ void p5raylib_render();
 //
 // >>implementation
 //
-#ifdef P5RAYLIB_IMPL
+#ifdef P5_RAYLIB_IMPL
 
 Color p5raylib_color(p5_Color p5_color)
 {
@@ -65,5 +65,5 @@ void p5raylib_render()
     p5render_commands_reset();
 }
 
-#endif // P5RAYLIB_IMPL
+#endif // P5_RAYLIB_IMPL
 
