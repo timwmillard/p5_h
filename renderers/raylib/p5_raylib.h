@@ -51,20 +51,33 @@ void p5raylib_render()
     draw();
     p5render_CommandArray cmds = p5render_commands();
     for (int i = 0; i < cmds.count; i++) {
+        p5render_Command cmd = cmds.items[i];
         switch (cmds.items[i].type) {
             case P5_RENDER_RECT: {
-                p5render_Rect rect = cmds.items[i].rect;
-                if (rect.border_width > 0) {
-                    Color color =  p5raylib_color(rect.border_color);
-                    float w = rect.border_width;
-                    float w2 = w * 2.0;
-                    DrawRectangle(rect.x - w, rect.y - w, rect.w + w2, rect.h + w2, color);
+                p5render_Rect rect = cmd.rect;
+                float x = rect.x;
+                float y = rect.y;
+                float w = rect.w;
+                float h = rect.h;
+                if (cmd.has_stroke) {
+                    Color color =  p5raylib_color(cmd.stroke_color);
+                    float s = cmd.stroke_width;
+                    DrawRectangle(x-s, y-s, w+s, s, color); // top 
+                    DrawRectangle(x+w, y-s, s, s+h, color); // right
+                    DrawRectangle(x-s, y, s, h+s, color); // left
+                    DrawRectangle(x, y+h, w+s, s, color); // bottom
                 }
-                Color color =  p5raylib_color(rect.bg_color);
-                DrawRectangle(rect.x, rect.y, rect.w, rect.h, color);
-                break;
-             }
-            case P5_RENDER_ARC:
+                if (cmd.has_fill) { 
+                    Color color = p5raylib_color(cmd.fill_color);
+                    DrawRectangle(x, y, w, h, color);
+                }
+            } break;
+            case P5_RENDER_ARC: {
+                p5render_Arc arc = cmd.arc;
+                float x = arc.x;
+                float y = arc.y;
+                float r = arc.r;
+            } break;
             case P5_RENDER_POINT:
             case P5_RENDER_QUAD:
             case P5_RENDER_TRIANGLE:

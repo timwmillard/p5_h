@@ -386,6 +386,16 @@ typedef enum {
 } p5render_Type;
 
 typedef struct {
+    float x;
+    float y;
+    float r;
+    float start_angle;
+    float end_angle;
+
+    p5_Color bg_color;
+    p5_Color border_color;
+    float border_width;
+// void DrawCircleSector(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color)
 } p5render_Arc;
 
 typedef struct {
@@ -397,15 +407,11 @@ typedef struct {
     float tr; // Number: optional radius of top-right corner.
     float br; // Number: optional radius of bottom-right corner.
     float bl; // Number: optional radius of bottom-left corner.
-    p5_Color bg_color;
-    p5_Color border_color;
-    float border_width;
 } p5render_Rect;
 
 typedef struct {
     float x; //j Number: x-coordinate of the rectangle.
     float y; // Number: y-coordinate of the rectangle.
-    p5_Color color;
 } p5render_Point;
 
 typedef struct {
@@ -414,7 +420,7 @@ typedef struct {
 typedef struct {
 } p5render_Triangle;
 
-typedef struct p5render_ {
+typedef struct {
     p5render_Type type;
     union {
         p5render_Arc arc;
@@ -423,10 +429,16 @@ typedef struct p5render_ {
         p5render_Quad quad;
         p5render_Triangle triangle;
     };
+    p5_Color fill_color;
+    p5_Color stroke_color;
+
+    bool has_fill;
+    bool has_stroke;
+    float stroke_width;
 } p5render_Command;
 
 // A sized array of render commands.
-typedef struct p5render_CommandArray {
+typedef struct {
     // The underlying max capacity of the array, not necessarily all initialized.
     int32_t capacity;
     // The number of initialized elements in this array. Used for loops and iteration.
@@ -533,6 +545,11 @@ void p5_rect(float x, float y, float w, float h)
 {
     p5render_Command cmd = {
         .type = P5_RENDER_RECT,
+        .fill_color = p5_state.draw.fill_color,
+        .stroke_color = p5_state.draw.stroke_color,
+        .has_fill = p5_state.draw.has_fill,
+        .has_stroke = p5_state.draw.has_stroke,
+        .stroke_width = p5_state.draw.stroke_width,
         .rect = {
             .x = x,
             .y = y,
@@ -540,13 +557,23 @@ void p5_rect(float x, float y, float w, float h)
             .h = h,
         }
     };
-    if (p5_state.draw.has_fill) {
-        cmd.rect.bg_color = p5_state.draw.fill_color;
-    }
-    if (p5_state.draw.has_stroke) {
-        cmd.rect.border_color = p5_state.draw.stroke_color;
-        cmd.rect.border_width = p5_state.draw.stroke_width;
-    }
+    p5_da_append(&p5_state.commands, cmd);
+}
+void p5_circle(float x, float y, float diameter)
+{
+    p5render_Command cmd = {
+        .type = P5_RENDER_ARC,
+        .fill_color = p5_state.draw.fill_color,
+        .stroke_color = p5_state.draw.stroke_color,
+        .has_fill = p5_state.draw.has_fill,
+        .has_stroke = p5_state.draw.has_stroke,
+        .stroke_width = p5_state.draw.stroke_width,
+        .arc = {
+            .x = x,
+            .y = y,
+            .r = diameter/2,
+        }
+    };
     p5_da_append(&p5_state.commands, cmd);
 }
 
