@@ -540,6 +540,22 @@ void p5_background_rgb(unsigned int r, unsigned int g, unsigned int b)
 {
     p5_state.background_color = (p5_Color){r / 255.0f, g / 255.0f, b / 255.0f, 1.0f};
 }
+void p5_point(float x, float y)
+{
+    p5render_Command cmd = {
+        .type = P5_RENDER_POINT,
+        .fill_color = p5_state.draw.fill_color,
+        .stroke_color = p5_state.draw.stroke_color,
+        .has_fill = p5_state.draw.has_fill,
+        .has_stroke = p5_state.draw.has_stroke,
+        .stroke_width = p5_state.draw.stroke_width,
+        .point = {
+            .x = x,
+            .y = y,
+        }
+    };
+    p5_da_append(&p5_state.commands, cmd);
+}
 
 void p5_rect(float x, float y, float w, float h)
 {
@@ -559,6 +575,12 @@ void p5_rect(float x, float y, float w, float h)
     };
     p5_da_append(&p5_state.commands, cmd);
 }
+
+void p5_square(float x, float y, float size)
+{
+    p5_rect(x, y, size, size);
+}
+
 void p5_circle(float x, float y, float diameter)
 {
     p5render_Command cmd = {

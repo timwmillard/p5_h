@@ -9,6 +9,7 @@ int main(void)
 {
     InitWindow(800, 600, "P5 in Raylib");
     p5raylib_init();
+    SetTargetFPS(60);
 
     while(!WindowShouldClose()) {
         BeginDrawing();

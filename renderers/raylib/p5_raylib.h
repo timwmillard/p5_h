@@ -88,13 +88,42 @@ void p5raylib_render()
                     DrawRing((Vector2){x, y}, r, r+s, 0, 360, 32, color);
                 }
             } break;
-            case P5_RENDER_POINT:
-            case P5_RENDER_QUAD:
-            case P5_RENDER_TRIANGLE:
+            case P5_RENDER_POINT: {
+                if (cmd.has_fill) { 
+                    p5render_Point point = cmd.point;
+                    float x = point.x;
+                    float y = point.y;
+                    Color color =  p5raylib_color(cmd.fill_color);
+                    // DrawPoint(x, y, color);
+                }
+            } break;
+            case P5_RENDER_QUAD: {
+            } break;
+            case P5_RENDER_TRIANGLE: {
+            } break;
         }
 
     }
     p5render_commands_reset();
+}
+
+int p5_width(void)
+{
+    return GetRenderWidth();
+}
+
+int p5_height(void)
+{
+    return GetRenderHeight();
+}
+
+int p5_window_width(void)
+{
+    return GetScreenWidth();
+}
+int p5_window_height(void)
+{
+    return GetScreenHeight();
 }
 
 #endif // P5_RAYLIB_IMPL

@@ -55,9 +55,9 @@ CFLAGS += $(BACKEND) $(INCLUDES)
 LIBS += -L../../renderers/raylib/raylib-5.5/src -lraylib
 
 # Generic rule for building any .c file
-demo: main.c ../../p5.h canvas.c
+demo: main.c ../../p5.h ball.c
 	@echo "Building $@ for $(PLATFORM)..."
-	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $< canvas.c $(LIBS)
+	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $< ball.c $(LIBS)
 	@echo "Build complete: $@$(EXE_SUFFIX)"
 
 
