@@ -118,14 +118,24 @@ typedef enum {
 #define PI 3.14159265358979323846f
 #endif
 #ifndef TWO_PI
-#define TWO_PI (2.0f * PI)
+#define TWO_PI 6.28318530717958647693
 #endif
 #ifndef HALF_PI
-#define HALF_PI (PI * 0.5f)
+#define HALF_PI 1.57079632679489661923
+#endif
+#ifndef QUARTER_PI
+#define QUARTER_PI 0.7853982
+#endif
+#ifndef TAU
+#define TAU TWO_PI
 #endif
 
-#define P5_MAX(x, y) (((x) > (y)) ? (x) : (y))
-#define P5_MIN(x, y) (((x) < (y)) ? (x) : (y))
+#ifndef MAX
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#endif
+#ifndef MIN
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
 
 // Vector functions
 char *p5_vector2_to_string(p5_Vector2 vec);
@@ -458,22 +468,6 @@ typedef struct {
 
 } p5_Draw;
 
-static struct {
-    p5_Color background_color;
-
-    p5_Draw draw;
-    p5_Draw draw_stack[32];
-    int draw_stack_depth;
-
-    p5_Canvas canvas;
-    bool setup_called; // setup() function has been called, only run once.
-    float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
-    
-    p5render_CommandArray commands;
-
-    p5render_CommandArray commands_stack[32];
-    int commands_stack_depth;
-} p5_state;
 
 
 p5render_CommandArray p5render_commands();
@@ -491,7 +485,24 @@ p5_Color p5render_clearbackground();
 //
 // >>implementation
 //
+
 #ifdef P5_IMPL
+static struct {
+    p5_Color background_color;
+
+    p5_Draw draw;
+    p5_Draw draw_stack[32];
+    int draw_stack_depth;
+
+    p5_Canvas canvas;
+    bool setup_called; // setup() function has been called, only run once.
+    float color_maxes[4];  // Current color maximums for R/G/B/A (or H/S/B/A or H/S/L/A)
+    
+    p5render_CommandArray commands;
+
+    p5render_CommandArray commands_stack[32];
+    int commands_stack_depth;
+} p5_state;
 
 p5_Color p5render_background_color()
 {
