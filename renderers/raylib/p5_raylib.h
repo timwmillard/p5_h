@@ -54,11 +54,20 @@ void p5raylib_render()
         switch (cmds.items[i].type) {
             case P5_RENDER_RECT: {
                 p5render_Rect rect = cmds.items[i].rect;
-                // printf("p5 Raylib render rect = %f, %f\n", rect.x, rect.y);
+                if (rect.border_width > 0) {
+                    Color color =  p5raylib_color(rect.border_color);
+                    float w = rect.border_width;
+                    float w2 = w * 2.0;
+                    DrawRectangle(rect.x - w, rect.y - w, rect.w + w2, rect.h + w2, color);
+                }
                 Color color =  p5raylib_color(rect.bg_color);
                 DrawRectangle(rect.x, rect.y, rect.w, rect.h, color);
                 break;
              }
+            case P5_RENDER_ARC:
+            case P5_RENDER_POINT:
+            case P5_RENDER_QUAD:
+            case P5_RENDER_TRIANGLE:
         }
 
     }

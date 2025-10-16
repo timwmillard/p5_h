@@ -538,9 +538,15 @@ void p5_rect(float x, float y, float w, float h)
             .y = y,
             .w = w,
             .h = h,
-            .bg_color = p5_state.draw.fill_color,
         }
     };
+    if (p5_state.draw.has_fill) {
+        cmd.rect.bg_color = p5_state.draw.fill_color;
+    }
+    if (p5_state.draw.has_stroke) {
+        cmd.rect.border_color = p5_state.draw.stroke_color;
+        cmd.rect.border_width = p5_state.draw.stroke_width;
+    }
     p5_da_append(&p5_state.commands, cmd);
 }
 
