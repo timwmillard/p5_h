@@ -3,12 +3,12 @@ UNAME_S := $(shell uname -s)
 
 # Common compiler flags
 CFLAGS = -std=c99 -Wall -Wextra -O2
-INCLUDES =  -I. -I.. -Ideps -I../renderers/sokol -I../renderers/sokol/deps
+INCLUDES =  -I. -I../.. -Ideps -I../../renderers/raylib
 
 # Platform-specific configuration
 ifeq ($(UNAME_S), Linux)
     PLATFORM = linux
-    BACKEND = -DSOKOL_GLCORE
+    BACKEND =
     LIBS = -lGL -lm -lpthread -ldl
     CFLAGS += -D_GNU_SOURCE
     CC = gcc
@@ -16,15 +16,14 @@ endif
 
 ifeq ($(UNAME_S), Darwin)
     PLATFORM = macos
-    BACKEND = -DSOKOL_METAL
-    LIBS = -framework Cocoa -framework QuartzCore -framework Metal -framework MetalKit
+    LIBS = -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT -framework OpenGL
     CFLAGS += -ObjC
     CC = clang
 endif
 
 ifeq ($(OS), Windows_NT)
     PLATFORM = windows
-    BACKEND = -DSOKOL_D3D11
+    BACKEND =
     LIBS = -lgdi32 -lole32 -ld3d11 -ldxgi
     CFLAGS += -D_WIN32_WINNT=0x0601
     EXE_SUFFIX = .exe
@@ -38,7 +37,7 @@ endif
 ifeq ($(MAKECMDGOALS), web)
     CC = emcc
     PLATFORM = web
-    BACKEND = -DSOKOL_GLES3
+    BACKEND =
     CFLAGS = -std=c99 -O2 -s USE_WEBGL2=1 -s FULL_ES3=1
     LIBS = -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 --shell-file deps/shell.html
     EXE_SUFFIX = .html
@@ -53,21 +52,13 @@ else
 endif
 
 CFLAGS += $(BACKEND) $(INCLUDES)
-
-DEPS = deps/sokol_app.h \
-	   deps/sokol_gfx.h \
-	   deps/sokol_glue.h
-
+LIBS += -L../../renderers/raylib/raylib-5.5/src -lraylib
 
 # Generic rule for building any .c file
-demo: main.c deps/deps.o ../p5.h
+demo: main.c ../../p5.h
 	@echo "Building $@ for $(PLATFORM)..."
-	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $< deps/deps.o $(LIBS)
+	$(CC) $(CFLAGS) -o $@$(EXE_SUFFIX) $< $(LIBS)
 	@echo "Build complete: $@$(EXE_SUFFIX)"
-
-deps/deps.o: deps/deps.c $(DEPS)
-	$(CC) -c $(CFLAGS) -o deps/deps.o deps/deps.c
-
 
 
 # Update Depedencies

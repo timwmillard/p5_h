@@ -261,7 +261,7 @@ static inline void arc_with_mode(float x, float y, float w, float h, float start
 #ifndef P5_ASSERT
 #include <assert.h>
 #define P5_ASSERT assert
-#endif /* P5_ASSERT */
+#endif /* P__ASSERT */
 
 #ifndef P5_REALLOC
 #include <stdlib.h>
@@ -368,11 +368,11 @@ p5_da_foreach(int, x, &xs) {
 // } p5render_Vertex;
 
 typedef enum {
-    P5RENDER_ARC,
-    P5RENDER_RECT,
-    P5RENDER_POINT,
-    P5RENDER_QUAD,
-    P5RENDER_TRIANGLE,
+    P5_RENDER_ARC,
+    P5_RENDER_RECT,
+    P5_RENDER_POINT,
+    P5_RENDER_QUAD,
+    P5_RENDER_TRIANGLE,
 } p5render_Type;
 
 typedef struct {
@@ -475,10 +475,9 @@ static struct {
     int commands_stack_depth;
 } p5_state;
 
-p5render_CommandArray p5render_commands()
-{
-    return p5_state.commands;
-}
+
+p5render_CommandArray p5render_commands();
+void p5render_commands_reset();
 
 #endif // P5_H
 
@@ -493,10 +492,21 @@ p5render_CommandArray p5render_commands()
 //
 #ifdef P5_IMPLEMENTATION
 
+p5render_CommandArray p5render_commands()
+{
+    return p5_state.commands;
+}
+
+void p5render_commands_reset()
+{
+    p5_state.commands.count = 0;
+}
+
+
 void p5_rect(float x, float y, float w, float h)
 {
     p5render_Command cmd = {
-        .type = P5RENDER_RECT,
+        .type = P5_RENDER_RECT,
         .rect = {
             .x = x,
             .y = y,
