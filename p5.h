@@ -130,18 +130,9 @@ typedef enum {
 #define TAU TWO_PI
 #endif
 
-#ifndef MAX
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#endif
-#ifndef MIN
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#endif
-
-static inline double map(float value, float start1, float stop1, float start2, float stop2)
-{
-    return (value - start1) / (stop1 - start1) * (stop2 - start2) + start2;
-}
-
+#define P5_MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define P5_MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define P5_MAP(value, start1, stop1, start2, stop2) (((value) - (start1)) / ((stop1) - (start1)) * ((stop2) - (start2)) + (start2)))
 
 // Global variables
 extern float p5_delta_time;
@@ -214,10 +205,10 @@ float p5_noise3(float x, float y, float z);
 #define HSL P5_HSL
 #define OPEN P5_OPEN
 #define CHORD P5_CHORD
-#define PIE P5_PIE
 
 #define max P5_MAX
 #define min P5_MIN
+#define map P5_MAP
 
 // Globals
 #define deltaTime p5_delta_time
