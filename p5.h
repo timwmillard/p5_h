@@ -137,6 +137,9 @@ typedef enum {
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #endif
 
+// Global variables
+extern float p5_delta_time;
+
 // Vector functions
 char *p5_vector2_to_string(p5_Vector2 vec);
 void p5_vector2_set(p5_Vector2 *vec, float x, float y);
@@ -191,6 +194,9 @@ void p5_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x
 void p5_arc(float x, float y, float w, float h, float start, float stop);
 void p5_arc_with_mode(float x, float y, float w, float h, float start, float stop, p5_ArcMode mode);
 
+// Noise
+float p5_noise2(float x, float y);
+float p5_noise3(float x, float y, float z);
 
 /*** Short names ***/
 #ifndef P5_NO_SHORT_NAMES
@@ -206,6 +212,9 @@ void p5_arc_with_mode(float x, float y, float w, float h, float start, float sto
 
 #define max P5_MAX
 #define min P5_MIN
+
+// Globals
+#define deltaTime p5_delta_time
 
 // should this be deprecated for color
 #define COLOR p5_color
@@ -262,6 +271,12 @@ static inline void triangle(float x1, float y1, float x2, float y2, float x3, fl
 static inline void quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) { p5_quad(x1, y1, x2, y2, x3, y3, x4, y4); }
 static inline void arc(float x, float y, float w, float h, float start, float stop) { p5_arc(x, y, w, h, start, stop); }
 static inline void arc_with_mode(float x, float y, float w, float h, float start, float stop, ArcMode mode) { p5_arc_with_mode(x, y, w, h, start, stop, mode); }
+
+// Noise
+static inline float noise(float x, float y) { return p5_noise2(x, y); }
+static inline float noise2(float x, float y) { return p5_noise2(x, y); }
+static inline float noise3(float x, float y, float z) { return p5_noise3(x, y, z); }
+
 
 #endif // P5_NO_SHORT_NAMES
 

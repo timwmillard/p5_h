@@ -49,6 +49,10 @@ target_link_libraries(ball ${PLATFORM_LIBS} raylib)
 add_executable(point main.c point.c)
 target_link_libraries(point ${PLATFORM_LIBS} raylib)
 
+# noise
+add_executable(noise main.c noise.c)
+target_link_libraries(noise ${PLATFORM_LIBS} raylib)
+
 # Web-specific targets
 if(EMSCRIPTEN)
     # Set file extensions for web builds

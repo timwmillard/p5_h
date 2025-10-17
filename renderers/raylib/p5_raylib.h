@@ -29,6 +29,10 @@ void p5raylib_render();
 //
 #ifdef P5_RAYLIB_IMPL
 
+static Image p5raylib_perlin_image;
+
+float p5_delta_time = 0.0f;
+
 Color p5raylib_color(p5_Color p5_color)
 {
     return (Color){p5_color.r * 255.0f, p5_color.g * 255.0f, p5_color.b * 255.0f, p5_color.a * 255.0f};
@@ -36,6 +40,7 @@ Color p5raylib_color(p5_Color p5_color)
 
 void p5raylib_init()
 {
+    p5raylib_perlin_image = GenImagePerlinNoise(p5_width(),p5_height(), 0, 0, 1);           // Generate image: perlin noise
     setup();
 }
 
@@ -48,6 +53,7 @@ void p5raylib_clear_background()
 
 void p5raylib_render()
 {
+    p5_delta_time = GetFrameTime();
     draw();
     p5render_CommandArray cmds = p5render_commands();
     for (int i = 0; i < cmds.count; i++) {
@@ -125,6 +131,19 @@ int p5_window_width(void)
 int p5_window_height(void)
 {
     return GetScreenHeight();
+}
+
+float p5_noise2(float x, float y)
+{
+    Color color = GetImageColor(p5raylib_perlin_image, x, y);
+    return color.r / 255;
+}
+
+float p5_noise3(float x, float y, float z)
+{
+    (void)z;
+    Color color = GetImageColor(p5raylib_perlin_image, x, y);
+    return color.r / 255;
 }
 
 #endif // P5_RAYLIB_IMPL
