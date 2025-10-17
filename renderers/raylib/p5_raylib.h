@@ -6,6 +6,7 @@
 #define P5_RAYLIB_H
 
 #include <stdio.h>
+#include <math.h>
 #ifndef P5_H
 #define P5_NO_SHORT_NAMES
 #include "p5.h"
@@ -30,6 +31,8 @@ void p5raylib_render();
 #ifdef P5_RAYLIB_IMPL
 
 static Image p5raylib_perlin_image;
+#define P5_NOISE_TEXTURE_SIZE 512
+#define P5_NOISE_SCALE 0.05f
 
 float p5_delta_time = 0.0f;
 
@@ -40,7 +43,8 @@ Color p5raylib_color(p5_Color p5_color)
 
 void p5raylib_init()
 {
-    p5raylib_perlin_image = GenImagePerlinNoise(p5_width(),p5_height(), 0, 0, 1);           // Generate image: perlin noise
+    // Generate a large Perlin noise texture for continuous sampling
+    p5raylib_perlin_image = GenImagePerlinNoise(P5_NOISE_TEXTURE_SIZE, P5_NOISE_TEXTURE_SIZE, 0, 0, P5_NOISE_SCALE);
     setup();
 }
 
@@ -133,17 +137,63 @@ int p5_window_height(void)
     return GetScreenHeight();
 }
 
+// Helper function for linear interpolation
+static inline float p5_lerp(float a, float b, float t) {
+    return a + t * (b - a);
+}
+
+// Bilinear interpolation helper for smooth noise sampling
+static float p5_sample_noise_bilinear(float x, float y) {
+    // Wrap coordinates to texture size using fmod for continuous space
+    float fx = fmodf(x, (float)P5_NOISE_TEXTURE_SIZE);
+    float fy = fmodf(y, (float)P5_NOISE_TEXTURE_SIZE);
+
+    // Handle negative coordinates
+    if (fx < 0) fx += P5_NOISE_TEXTURE_SIZE;
+    if (fy < 0) fy += P5_NOISE_TEXTURE_SIZE;
+
+    // Get integer and fractional parts
+    int x0 = (int)fx;
+    int y0 = (int)fy;
+    int x1 = (x0 + 1) % P5_NOISE_TEXTURE_SIZE;
+    int y1 = (y0 + 1) % P5_NOISE_TEXTURE_SIZE;
+
+    float tx = fx - x0;
+    float ty = fy - y0;
+
+    // Sample four neighboring pixels
+    Color c00 = GetImageColor(p5raylib_perlin_image, x0, y0);
+    Color c10 = GetImageColor(p5raylib_perlin_image, x1, y0);
+    Color c01 = GetImageColor(p5raylib_perlin_image, x0, y1);
+    Color c11 = GetImageColor(p5raylib_perlin_image, x1, y1);
+
+    // Normalize to [0, 1] range
+    float v00 = c00.r / 255.0f;
+    float v10 = c10.r / 255.0f;
+    float v01 = c01.r / 255.0f;
+    float v11 = c11.r / 255.0f;
+
+    // Bilinear interpolation
+    float v0 = p5_lerp(v00, v10, tx);
+    float v1 = p5_lerp(v01, v11, tx);
+    return p5_lerp(v0, v1, ty);
+}
+
 float p5_noise2(float x, float y)
 {
-    Color color = GetImageColor(p5raylib_perlin_image, x, y);
-    return color.r / 255;
+    // Map continuous coordinates to texture space
+    // Scale factor controls frequency - smaller = smoother/larger features
+    float scale = 10.0f;
+    return p5_sample_noise_bilinear(x * scale, y * scale);
 }
 
 float p5_noise3(float x, float y, float z)
 {
-    (void)z;
-    Color color = GetImageColor(p5raylib_perlin_image, x, y);
-    return color.r / 255;
+    // For 3D noise, we use the z coordinate to offset the 2D sampling
+    // This creates a pseudo-3D effect by adding z as an offset
+    (void)z; // Could use z to offset x,y but keeping it simple for now
+    float scale = 10.0f;
+    return p5_sample_noise_bilinear((x + z) * scale, (y + z) * scale);
 }
 
 #endif // P5_RAYLIB_IMPL

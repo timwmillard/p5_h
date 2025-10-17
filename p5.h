@@ -137,6 +137,12 @@ typedef enum {
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #endif
 
+static inline double map(float value, float start1, float stop1, float start2, float stop2)
+{
+    return (value - start1) / (stop1 - start1) * (stop2 - start2) + start2;
+}
+
+
 // Global variables
 extern float p5_delta_time;
 
