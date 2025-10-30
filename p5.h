@@ -132,7 +132,9 @@ typedef enum {
 
 #define P5_MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define P5_MIN(x, y) (((x) < (y)) ? (x) : (y))
-#define P5_MAP(value, start1, stop1, start2, stop2) (((value) - (start1)) / ((stop1) - (start1)) * ((stop2) - (start2)) + (start2)))
+#define P5_MAP(value, start1, stop1, start2, stop2) (((value) - (start1)) / ((stop1) - (start1)) * ((stop2) - (start2)) + (start2))
+
+    // return (value - start1) / (stop1 - start1) * (stop2 - start2) + start2;
 
 // Global variables
 extern float p5_delta_time;

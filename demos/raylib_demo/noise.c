@@ -6,13 +6,14 @@ void setup() {
 float t = 0;
 
 void draw() {
-  background(color("white"));
+  // background(color("white"));
   float n = noise(t, 0);
   float x = map(n, 0, 1, 0, width());
     // Use map() to customize the range of Perlin noise.
 
+  fill(color("green"));
   circle(x, 180, 16);
-  t += 0.01;
+  t += 0.1;
    // Move forward in time.
 
 }
